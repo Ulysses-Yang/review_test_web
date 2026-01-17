@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的個人首頁</title>
+    <style>
+        /* --- 這裡是 CSS 樣式區，決定網頁長什麼樣子 --- */
+        
+        /* 1. 設定整頁背景 */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif; /* 設定字體 */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* 漂亮的漸層背景 */
+            height: 100vh; /* 讓背景填滿整個螢幕高度 */
+            display: flex;
+            justify-content: center; /* 左右置中 */
+            align-items: center; /* 上下置中 */
+            margin: 0;
+        }
+
+        /* 2. 設定白色卡片區塊 */
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px; /* 圓角 */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); /* 陰影效果 */
+            text-align: center; /* 文字置中 */
+            max-width: 350px;
+            width: 90%; /* 手機版時會自動縮小 */
+        }
+
+        /* 3. 設定頭像圖片 */
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%; /* 變成圓形 */
+            object-fit: cover;
+            border: 4px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        /* 4. 設定名字與文字 */
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* 5. 設定按鈕 */
+        .btn {
+            background-color: #764ba2;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none; /* 去除底線 */
+            border-radius: 30px;
+            font-weight: bold;
+            transition: 0.3s; /* 動畫過渡時間 */
+        }
+
+        .btn:hover {
+            background-color: #5a367f; /* 滑鼠移過去變深色 */
+            transform: scale(1.05); /* 滑鼠移過去稍微放大 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="頭像" class="avatar">
+        
+        <h1>王小明</h1>
+        
+        <p>
+            嗨！我是網頁開發新手。<br>
+            這是我用 VS Code 做的第一個網站。<br>
+            喜歡學習新技術，熱愛挑戰！
+        </p>
+
+        <a href="#" class="btn">聯絡我</a>
+    </div>
+
+</body>
+</html>
