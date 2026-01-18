@@ -132,3 +132,54 @@ body {
 .close-btn { background: transparent; border: none; font-size: 24px; color: #999; cursor: pointer; }
 .pdf-frame { width: 100%; height: 100%; border: none; }
 .center-msg { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; color: #666; padding: 20px; }
+@media (max-width: 600px) {
+    
+    /* 1. 讓彈窗在手機上變成「全螢幕」，避免被切到 */
+    .modal-content {
+        width: 100%;
+        height: 100%;       /* 佔滿全高 */
+        max-width: none;    /* 移除寬度限制 */
+        max-height: none;   /* 移除高度限制 */
+        border-radius: 0;   /* 移除圓角 */
+        padding: 20px;
+        box-shadow: none;   /* 移除陰影 (全螢幕不需要) */
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 2. 讓中間內容區塊可以捲動 (關鍵：鍵盤跳出時才滑得動) */
+    .modal-body {
+        flex: 1;            /* 佔滿剩餘空間 */
+        overflow-y: auto;   /* 內容太多時可滑動 */
+        padding-bottom: 50px; /* 預留底部空間，避免被手機橫條擋住 */
+    }
+
+    /* 3. 加大輸入框與按鈕，比較好點 */
+    .full-input {
+        padding: 15px;      /* 加大內距 */
+        font-size: 16px;    /* 防止 iOS 自動放大畫面 */
+        margin-bottom: 15px; /* 增加間距 */
+    }
+
+    .full-btn {
+        padding: 15px;      /* 加大按鈕 */
+        font-size: 18px;
+    }
+
+    /* 4. 調整關閉按鈕的位置，避免太靠邊 */
+    .close-btn {
+        font-size: 32px;
+        padding: 5px 15px;
+    }
+
+    /* 5. 調整標題大小 */
+    .modal-header h3 {
+        font-size: 22px;
+    }
+    
+    /* 6. 登入/註冊切換文字加大 */
+    .switch-link {
+        font-size: 16px;
+        padding: 10px 0;
+    }
+}
