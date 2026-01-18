@@ -15,7 +15,7 @@
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent;
-            padding-bottom: constant(safe-area-inset-bottom); /* iOS 適配 */
+            padding-bottom: constant(safe-area-inset-bottom);
             padding-bottom: env(safe-area-inset-bottom);
         }
 
@@ -44,7 +44,6 @@
         /* 頁面切換控制 */
         .page { display: none; padding: 20px; max-width: 800px; margin: 0 auto; height: calc(100vh - 60px); box-sizing: border-box; }
         .page.active { display: block; }
-        /* Unit Screen 需要特殊佈局 (滿版) */
         #unit-screen.page.active { display: flex; flex-direction: column; padding: 0; }
 
         /* --- 首頁樣式 --- */
@@ -58,60 +57,82 @@
         .unit-card { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; }
         .unit-icon { width: 50px; height: 50px; border-radius: 25px; display: flex; justify-content: center; align-items: center; font-size: 24px; margin-right: 15px; color: #fff; }
 
-        /* --- 單元詳細頁樣式 (Tabs & Content) --- */
+        /* --- 單元詳細頁樣式 --- */
         .tab-container { display: flex; border-bottom: 1px solid #eee; background: #fff; }
         .tab { flex: 1; padding: 15px 0; text-align: center; cursor: pointer; color: #666; font-size: 16px; }
         .tab.active { border-bottom: 3px solid #007AFF; color: #007AFF; font-weight: bold; }
         
         .content-area { flex: 1; background: #f9f9f9; overflow-y: auto; position: relative; }
         
-        /* PDF 下載條 */
         .download-bar { padding: 12px; text-align: center; border-bottom: 1px solid #ddd; background: #e3f2fd; color: #1565c0; font-weight: bold; cursor: pointer; }
         .download-bar.answer { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
         
         /* 留言板樣式 */
-        .chat-container { padding: 15px; padding-bottom: 80px; }
+        .chat-container { padding: 15px; padding-bottom: 140px; /* 預留底部登入框空間 */ }
         .comment-item { background: #fff; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .comment-user { font-size: 12px; color: #888; margin-bottom: 4px; }
         .comment-text { font-size: 16px; color: #333; word-break: break-all; }
         
-        /* 留言輸入框 */
-        .input-area {
+        /* 底部區域 (包含輸入框 或 登入框) */
+        .bottom-action-area {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: #fff; border-top: 1px solid #eee; padding: 10px;
-            display: flex; gap: 10px; z-index: 50;
-            max-width: 800px; margin: 0 auto; /* 限制在大螢幕的寬度 */
+            background: #fff; border-top: 1px solid #eee; padding: 15px;
+            z-index: 50; max-width: 800px; margin: 0 auto;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
         }
+
+        /* 留言輸入模式 */
+        .input-row { display: flex; gap: 10px; }
         .chat-input { flex: 1; background: #f0f0f0; border: none; border-radius: 20px; padding: 10px 15px; font-size: 16px; outline: none; }
         .send-btn { background: #007AFF; color: white; border: none; border-radius: 20px; padding: 0 20px; font-weight: bold; cursor: pointer; }
+
+        /* 登入模式 */
+        .auth-row { display: flex; flex-direction: column; gap: 10px; }
+        .auth-title { text-align: center; font-size: 14px; color: #666; margin-bottom: 5px; }
+        .auth-inputs { display: flex; gap: 10px; }
+        .auth-inputs input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .auth-btns { display: flex; gap: 10px; }
+        .auth-btns button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-login { background: #007AFF; color: white; }
+        .btn-register { background: #E0E0E0; color: #333; }
 
         /* PDF iframe */
         .pdf-frame { width: 100%; height: 100%; border: none; }
         .center-msg { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; color: #666; padding: 20px; }
 
-        /* Modal 樣式 */
+        /* Modal (通用與通知) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: #fff; width: 85%; max-width: 400px; border-radius: 15px; padding: 20px; }
-        .btn { width: 100%; padding: 10px; margin-top: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
-        .btn-blue { background: #2196F3; } .btn-red { background: #d9534f; }
+        .modal-content { background: #fff; width: 90%; max-width: 400px; max-height: 80vh; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-body { overflow-y: auto; flex: 1; }
         
-        /* 隱藏/顯示控制 */
-        .hidden { display: none !important; }
+        /* 通知列表項目 */
+        .notif-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+        .notif-item:active { background: #f9f9f9; }
+        .notif-title { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .notif-body { font-size: 14px; color: #666; }
+        .notif-time { font-size: 12px; color: #999; margin-top: 5px; text-align: right; }
+        .new-badge { display: inline-block; background: red; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+        .btn { padding: 10px; margin-top: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; text-align: center; }
+        .btn-blue { background: #2196F3; } .btn-red { background: #d9534f; }
+        .close-btn { background: transparent; border: none; font-size: 24px; color: #999; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div class="icon-btn" onclick="openSettings()" id="settings-btn">
-            <ion-icon name="settings-outline"></ion-icon>
+            <ion-icon name="person-circle-outline"></ion-icon>
         </div>
+        
         <div class="icon-btn" onclick="handleBack()" id="back-btn" style="display: none;">
             <ion-icon name="arrow-back-outline"></ion-icon>
         </div>
         
         <div class="header-title" id="header-title">首頁</div>
         
-        <div class="icon-btn" style="position: relative;">
+        <div class="icon-btn" style="position: relative;" onclick="openNotifications()">
             <ion-icon name="notifications-outline" style="color: #007AFF;"></ion-icon>
             <div id="badge" class="badge" style="display: none;">0</div>
         </div>
@@ -125,16 +146,16 @@
         <div class="card science-card" onclick="goToSubject('science')">
             <h1>🧪 理化</h1><p>Science</p>
         </div>
+        
         <div id="teacher-section" style="display: none; background: #fffbe6; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid #ffe58f;">
             <p style="text-align: center; font-weight: bold; color: #666; margin-top: 0;">--- 老師發送通知區 ---</p>
-            <button class="btn btn-blue" onclick="alert('請在 App 操作上傳，網頁版僅供瀏覽與通知')">➕ 新增單元 / 上傳檔案</button>
-            <div style="margin: 10px 0; color: #555;">發送目標單元：</div>
-            <select id="admin-unit-select" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd;">
+            <div style="margin: 10px 0; color: #555;">目標單元：</div>
+            <select id="admin-unit-select" style="width: 100%; padding: 10px; margin-bottom: 10px;">
                 <option value="">載入中...</option>
             </select>
             <div style="display: flex; gap: 10px;">
-                <button class="btn" style="background: #FF9800;" onclick="simulateTeacherUpload('question')">📢 通知：新題目</button>
-                <button class="btn" style="background: #4CAF50;" onclick="simulateTeacherUpload('answer')">📢 通知：新詳解</button>
+                <button class="btn" style="background: #FF9800; flex:1;" onclick="simulateTeacherUpload('question')">📢 通知題目更新</button>
+                <button class="btn" style="background: #4CAF50; flex:1;" onclick="simulateTeacherUpload('answer')">📢 通知詳解更新</button>
             </div>
         </div>
     </div>
@@ -165,29 +186,56 @@
                 <div class="chat-container" id="chat-list">
                     <div style="text-align: center; color: #999; margin-top: 20px;">載入留言中...</div>
                 </div>
-                <div class="input-area">
-                    <input type="text" id="comment-input" class="chat-input" placeholder="輸入問題..." onkeypress="handleEnter(event)">
-                    <button class="send-btn" onclick="sendComment()">送出</button>
+
+                <div class="bottom-action-area">
+                    
+                    <div id="chat-input-area" class="input-row" style="display: none;">
+                        <input type="text" id="comment-input" class="chat-input" placeholder="輸入問題..." onkeypress="handleEnter(event)">
+                        <button class="send-btn" onclick="sendComment()">送出</button>
+                    </div>
+
+                    <div id="chat-auth-ui" class="auth-row">
+                        <div class="auth-title">請登入以參與討論 (新同學請按註冊)</div>
+                        <div class="auth-inputs">
+                            <input type="email" id="chat-email" placeholder="Email">
+                            <input type="password" id="chat-pwd" placeholder="密碼 (6位以上)">
+                        </div>
+                        <div class="auth-btns">
+                            <button class="btn-login" onclick="loginFromChat()">登入</button>
+                            <button class="btn-register" onclick="registerFromChat()">註冊</button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div id="notification-modal" class="modal-overlay" onclick="if(event.target === this) closeNotifications()">
         <div class="modal-content">
-            <h2 style="text-align: center;">設定</h2>
-            <div id="auth-ui">
-                <input type="email" id="login-email" placeholder="Email" style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;">
-                <input type="password" id="login-pwd" placeholder="Password" style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;">
-                <button class="btn btn-blue" onclick="login()">管理員登入</button>
+            <div class="modal-header">
+                <h3 style="margin:0;">🔔 通知中心</h3>
+                <button class="close-btn" onclick="closeNotifications()">×</button>
             </div>
-            <button class="btn" style="background: #ccc; color: #333;" onclick="document.getElementById('settings-modal').style.display='none'">關閉</button>
+            <div class="modal-body" id="notif-list">
+                <p style="text-align: center; color: #999;">載入中...</p>
+            </div>
+            <button class="btn" style="background: #eee; color: #666; margin-top:15px;" onclick="closeNotifications()">關閉並清除紅點</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content" style="text-align: center;">
+            <h2 id="settings-title">帳號設定</h2>
+            <p id="settings-user-info"></p>
+            <button class="btn btn-red" onclick="logout()">登出</button>
+            <button class="btn" style="background: #ccc; color: #333;" onclick="document.getElementById('settings-modal').style.display='none'">取消</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, getDoc, doc, where, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // ▼▼▼ 請填入你的 Firebase Config ▼▼▼
@@ -207,48 +255,155 @@
         const db = getFirestore(app);
         const ADMIN_EMAIL = "ulysses950710@gmail.com";
 
-        // 全域變數
         window.currentUser = null;
         window.currentUnitData = null;
         window.currentUnitId = null;
-        let unsubscribeChat = null; // 用來取消監聽留言
+        let unsubscribeChat = null;
 
-        // --- 1. 身份驗證與初始化 ---
+        // --- 1. 身份驗證監聽 (控制聊天室底部 UI) ---
         onAuthStateChanged(auth, (user) => {
             window.currentUser = user;
-            if (user && user.email === ADMIN_EMAIL) {
-                document.getElementById('teacher-section').style.display = 'block';
-                document.getElementById('greeting-text').innerText = `嗨! ${user.displayName || '老師'} (管理員)`;
+            
+            // 更新聊天室底部介面
+            const inputArea = document.getElementById('chat-input-area');
+            const authUI = document.getElementById('chat-auth-ui');
+            
+            if (user) {
+                // 已登入
+                inputArea.style.display = 'flex';
+                authUI.style.display = 'none';
                 
-                // 登入後介面改變
-                const authUI = document.getElementById('auth-ui');
-                authUI.innerHTML = `<p>目前登入：${user.email}</p><button class="btn btn-red" onclick="logout()">登出</button>`;
+                // 更新設定視窗資訊
+                document.getElementById('settings-user-info').innerText = `目前登入：${user.email}`;
                 
-                fetchUnitsForAdmin(); // 載入老師用的下拉選單
+                // 首頁歡迎詞
+                document.getElementById('greeting-text').innerText = `嗨! ${user.displayName || user.email.split('@')[0]} 同學`;
+
+                // 老師介面
+                if (user.email === ADMIN_EMAIL) {
+                    document.getElementById('teacher-section').style.display = 'block';
+                    fetchUnitsForAdmin();
+                } else {
+                    document.getElementById('teacher-section').style.display = 'none';
+                }
             } else {
-                document.getElementById('teacher-section').style.display = 'none';
+                // 未登入
+                inputArea.style.display = 'none';
+                authUI.style.display = 'flex'; // 顯示內嵌登入框
                 document.getElementById('greeting-text').innerText = "嗨! 同學 選擇科目來練習吧";
-                document.getElementById('auth-ui').innerHTML = `
-                    <input type="email" id="login-email" placeholder="Email" style="width:100%;padding:10px;margin-bottom:10px;"><input type="password" id="login-pwd" placeholder="Password" style="width:100%;padding:10px;margin-bottom:10px;"><button class="btn btn-blue" onclick="login()">管理員登入</button>
-                `;
             }
+            
             listenNotifications();
         });
 
-        window.login = async () => {
-            const email = document.getElementById('login-email').value;
-            const pwd = document.getElementById('login-pwd').value;
-            try { await signInWithEmailAndPassword(auth, email, pwd); document.getElementById('settings-modal').style.display='none'; }
-            catch(e) { alert("登入失敗: " + e.message); }
+        // 聊天室內的登入
+        window.loginFromChat = async () => {
+            const email = document.getElementById('chat-email').value;
+            const pwd = document.getElementById('chat-pwd').value;
+            if(!email || !pwd) return alert("請輸入 Email 和密碼");
+            try { 
+                await signInWithEmailAndPassword(auth, email, pwd); 
+                // 登入成功後 onAuthStateChanged 會自動切換 UI
+            } catch(e) { alert("登入失敗: " + e.message); }
         };
-        window.logout = async () => { await signOut(auth); document.getElementById('settings-modal').style.display='none'; };
 
-        // --- 2. 路由控制 ---
+        // 聊天室內的註冊 (新增功能)
+        window.registerFromChat = async () => {
+            const email = document.getElementById('chat-email').value;
+            const pwd = document.getElementById('chat-pwd').value;
+            if(!email || !pwd) return alert("請輸入 Email 和密碼");
+            try {
+                await createUserWithEmailAndPassword(auth, email, pwd);
+                alert("註冊成功！");
+            } catch(e) { alert("註冊失敗: " + e.message); }
+        };
+
+        window.logout = async () => { 
+            await signOut(auth); 
+            document.getElementById('settings-modal').style.display='none'; 
+        };
+
+        window.openSettings = () => {
+            if(!window.currentUser) {
+                alert("請直接在單元討論區下方登入即可");
+                // 為了方便，如果沒登入點人頭，可以直接導向某個單元或提示
+            } else {
+                document.getElementById('settings-modal').style.display = 'flex';
+            }
+        };
+
+        // --- 2. 通知中心邏輯 (新功能) ---
+        window.openNotifications = async () => {
+            document.getElementById('notification-modal').style.display = 'flex';
+            const listEl = document.getElementById('notif-list');
+            listEl.innerHTML = '<p style="text-align: center; color: #999;">載入中...</p>';
+
+            try {
+                // 撈取最近 20 筆通知
+                const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(20));
+                const snap = await getDocs(q);
+                
+                if(snap.empty) {
+                    listEl.innerHTML = '<p style="text-align: center; margin-top: 20px;">目前沒有新通知</p>';
+                    return;
+                }
+
+                let html = '';
+                const lastRead = parseInt(localStorage.getItem('lastReadTime') || '0');
+
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    // 濾掉自己發的
+                    if(window.currentUser && data.senderEmail === window.currentUser.email) return;
+
+                    const isNew = (data.createdAt?.toMillis() || 0) > lastRead;
+                    const date = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleString() : '';
+                    
+                    // 點擊通知跳轉邏輯
+                    const onClickAttr = `onclick="handleNotificationClick('${data.unitId}', '${data.targetTab}')"`;
+
+                    html += `
+                        <div class="notif-item" ${onClickAttr}>
+                            <div class="notif-title">
+                                ${isNew ? '<span class="new-badge"></span>' : ''}
+                                ${data.title}
+                            </div>
+                            <div class="notif-body">${data.body}</div>
+                            <div class="notif-time">${date}</div>
+                        </div>
+                    `;
+                });
+                listEl.innerHTML = html || '<p style="text-align: center;">沒有其他人的通知</p>';
+            } catch(e) {
+                console.error(e);
+                listEl.innerHTML = '載入失敗';
+            }
+        };
+
+        window.closeNotifications = () => {
+            document.getElementById('notification-modal').style.display = 'none';
+            // 關閉時才清除紅點 (更新讀取時間)
+            localStorage.setItem('lastReadTime', Date.now().toString());
+            document.getElementById('badge').style.display = 'none';
+        };
+
+        // 點擊通知後的跳轉
+        window.handleNotificationClick = (unitId, tab) => {
+            closeNotifications(); // 先關視窗
+            if(unitId) {
+                // 先跳轉到單元
+                goToUnit(unitId).then(() => {
+                    // 再切換到對應的 Tab (question/answer/chat)
+                    if(tab) switchTab(tab);
+                });
+            }
+        };
+
+        // --- 3. 路由與頁面邏輯 (維持不變) ---
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             
-            // Header 按鈕控制
             if(pageId === 'home-screen') {
                 document.getElementById('back-btn').style.display = 'none';
                 document.getElementById('settings-btn').style.display = 'flex';
@@ -261,19 +416,14 @@
 
         window.handleBack = () => {
             if(document.getElementById('unit-screen').classList.contains('active')) {
-                // 從單元頁回到科目列表
                 if(unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
                 showPage('subject-screen');
                 document.getElementById('header-title').innerText = '單元列表';
             } else {
-                // 從科目列表回到首頁
                 showPage('home-screen');
             }
         };
 
-        window.openSettings = () => document.getElementById('settings-modal').style.display = 'flex';
-
-        // --- 3. 科目列表 ---
         window.goToSubject = async (subjectId) => {
             showPage('subject-screen');
             const container = document.getElementById('unit-list-container');
@@ -286,7 +436,6 @@
             try {
                 const snap = await getDocs(q);
                 if(snap.empty) { container.innerHTML = '<p style="text-align:center;">無單元</p>'; return; }
-                
                 let html = '';
                 snap.forEach(doc => {
                     const data = doc.data();
@@ -300,13 +449,10 @@
             } catch(e) { console.error(e); container.innerHTML = '讀取錯誤'; }
         };
 
-        // --- 4. 單元詳細頁 (核心功能) ---
         window.goToUnit = async (unitId) => {
             window.currentUnitId = unitId;
             showPage('unit-screen');
             document.getElementById('header-title').innerText = '載入中...';
-            
-            // 重置 Tab
             switchTab('question');
 
             try {
@@ -314,63 +460,46 @@
                 if(docSnap.exists()) {
                     window.currentUnitData = docSnap.data();
                     document.getElementById('header-title').innerText = window.currentUnitData.title;
-                    
-                    // 渲染 PDF 顯示器
                     renderPdfViewer('question', window.currentUnitData.questionPdf);
                     renderPdfViewer('answer', window.currentUnitData.answerPdf);
                 } else { alert('找不到單元'); handleBack(); }
             } catch(e) { console.error(e); alert('讀取失敗'); }
-            
-            // 啟動留言監聽
             loadComments(unitId);
         };
 
-        // Tab 切換
         window.switchTab = (tabName) => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
-
             ['question', 'answer', 'chat'].forEach(t => {
                 document.getElementById(`panel-${t}`).style.display = (t === tabName) ? (t === 'chat' ? 'block' : 'flex') : 'none';
             });
         };
 
-        // PDF 渲染邏輯
         function renderPdfViewer(type, url) {
             const viewer = document.getElementById(`viewer-${type}`);
             const dlBtn = document.getElementById(`dl-${type}`);
-            
             if(!url) {
                 viewer.innerHTML = `<div class="center-msg">尚未上傳檔案</div>`;
                 dlBtn.style.display = 'none';
                 return;
             }
-            
             dlBtn.style.display = 'block';
-            
-            // 判斷是否為手機 (寬度小於 768px 視為手機)
             const isMobile = window.innerWidth < 768;
-            
             if (isMobile) {
-                // 手機版：顯示大圖標引導點擊，不內嵌 iframe (iOS iframe 體驗差)
                 viewer.innerHTML = `
                     <div class="center-msg">
                         <p>手機版建議直接開啟 PDF 閱讀</p>
                         <button class="btn btn-blue" style="width:auto;" onclick="openPdf('${url}')">📄 點此開啟 PDF</button>
-                    </div>
-                `;
+                    </div>`;
             } else {
-                // 電腦版：使用 iframe
                 viewer.innerHTML = `<iframe src="${url}" class="pdf-frame"></iframe>`;
             }
         }
         
-        window.openPdf = (url) => { if(url) window.open(url, '_blank'); else alert('無連結'); };
+        window.openPdf = (url) => { if(url) window.open(url, '_blank'); };
 
-        // --- 5. 留言板功能 ---
         function loadComments(unitId) {
-            if(unsubscribeChat) unsubscribeChat(); // 先取消舊的
-            
+            if(unsubscribeChat) unsubscribeChat();
             const q = query(collection(db, 'units', unitId, 'comments'), orderBy('createdAt', 'desc'));
             const listEl = document.getElementById('chat-list');
             
@@ -380,9 +509,6 @@
                     return;
                 }
                 let html = '';
-                // 反轉順序顯示 (新留言在下? 或是模仿 App 倒序? App 是 inverted FlatList，代表新留言在底部)
-                // 這裡我們用標準網頁邏輯：新留言在下，但因為 snapshot 是 desc (新到舊)，所以我們跑迴圈時要反過來插入，或者直接用 flex-column-reverse
-                // 簡單作法：直接由上往下渲染 snapshot (新留言在最上面) -> 符合 desc 排序
                 snap.forEach(doc => {
                     const data = doc.data();
                     const name = data.userName || data.userEmail.split('@')[0];
@@ -390,8 +516,7 @@
                         <div class="comment-item">
                             <div class="comment-user">${name}:</div>
                             <div class="comment-text">${data.text}</div>
-                        </div>
-                    `;
+                        </div>`;
                 });
                 listEl.innerHTML = html;
             });
@@ -403,21 +528,19 @@
             const input = document.getElementById('comment-input');
             const text = input.value.trim();
             if(!text) return;
-            if(!window.currentUser) return alert('請先點擊左上角設定 -> 登入');
+            // 雙重檢查：如果 UI 顯示錯誤讓未登入者按到按鈕
+            if(!window.currentUser) return alert('請先登入');
 
             const user = window.currentUser;
             const name = user.displayName || user.email.split('@')[0];
             
             try {
-                // 寫入留言
                 await addDoc(collection(db, 'units', window.currentUnitId, 'comments'), {
                     text: text,
                     userEmail: user.email,
                     userName: name,
                     createdAt: serverTimestamp()
                 });
-                
-                // 寫入通知 (觸發紅點)
                 await addDoc(collection(db, 'notifications'), {
                     type: 'comment',
                     title: `💬 ${window.currentUnitData.title} 有新留言`,
@@ -427,18 +550,12 @@
                     createdAt: serverTimestamp(),
                     senderEmail: user.email
                 });
-                
                 input.value = '';
-                // 自動捲動到最上方 (因為我們是把最新留言顯示在最上面)
                 document.getElementById('unit-content').scrollTop = 0;
-                
-            } catch(e) {
-                console.error(e);
-                alert('留言失敗');
-            }
+            } catch(e) { console.error(e); alert('留言失敗'); }
         };
 
-        // --- 6. 老師廣播 (整合在首頁) ---
+        // --- 老師與紅點 ---
         async function fetchUnitsForAdmin() {
             const q = query(collection(db, 'units'), orderBy('order', 'asc'));
             const snap = await getDocs(q);
@@ -448,7 +565,6 @@
                 const opt = document.createElement('option');
                 opt.value = doc.id;
                 opt.text = doc.data().title;
-                // 把整個 data 綁定上去方便之後用
                 opt.dataset.title = doc.data().title;
                 select.appendChild(opt);
             });
@@ -458,10 +574,8 @@
             const select = document.getElementById('admin-unit-select');
             const unitId = select.value;
             if(!unitId) return alert('請選擇單元');
-            
             const title = select.options[select.selectedIndex].dataset.title;
             const isQ = type === 'question';
-            
             try {
                 await addDoc(collection(db, 'notifications'), {
                     type: 'file',
@@ -476,7 +590,6 @@
             } catch(e) { alert(e.message); }
         };
 
-        // --- 7. 紅點監聽 ---
         function listenNotifications() {
             const lastRead = parseInt(localStorage.getItem('lastReadTime') || '0');
             const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(50));
@@ -491,13 +604,6 @@
                 if(count > 0) { badge.style.display = 'flex'; badge.innerText = count>9?'9+':count; }
                 else badge.style.display = 'none';
             });
-            
-            // 點擊鈴鐺消紅點
-            document.getElementById('badge').parentElement.onclick = () => {
-                localStorage.setItem('lastReadTime', Date.now().toString());
-                document.getElementById('badge').style.display = 'none';
-                alert('通知已清除');
-            };
         }
     </script>
 </body>
