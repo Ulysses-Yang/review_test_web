@@ -209,3 +209,140 @@ body {
     .modal-header h3 { font-size: 22px; }
     .switch-link { font-size: 16px; padding: 10px 0; }
 }
+/* --- 新增：公告區塊樣式 --- */
+.announcement-box {
+    background-color: #ffebee; /* 淡淡的紅色背景 */
+    border: 1px solid #ffcdd2;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer; /* 讓滑鼠變成手指，暗示可點擊 */
+    transition: transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.announcement-box:active {
+    background-color: #ffcdd2; /* 按下去變深一點 */
+    transform: scale(0.98);
+}
+
+.anno-icon {
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.anno-content {
+    font-size: 14px;
+    color: #b71c1c; /* 深紅色文字 */
+    flex: 1;
+}
+
+/* 讓標題粗體更明顯 */
+.anno-content strong {
+    font-size: 15px;
+    display: block;
+    margin-bottom: 3px;
+}
+/* --- 新增：意見箱樣式 (綠色系) --- */
+.feedback-box {
+    background-color: #e8f5e9; /* 淡綠色背景 */
+    border: 1px solid #c8e6c9;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;       /* 與下方內容保持距離 */
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    color: #2e7d32;            /* 深綠色文字 */
+}
+
+.feedback-box:active {
+    background-color: #c8e6c9;
+    transform: scale(0.98);
+}
+
+/* 意見列表樣式 (給管理員看的) */
+.feedback-item {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 4px solid #4CAF50;
+    font-size: 14px;
+}
+.feedback-time {
+    font-size: 12px;
+    color: #999;
+    text-align: right;
+    margin-top: 5px;
+}
+/* --- 新增：公告列表樣式 --- */
+
+/* 每一個公告區塊 */
+.news-item {
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 5px;
+}
+
+/* 點擊的標題列 (summary) */
+.news-header {
+    padding: 15px;
+    cursor: pointer;
+    list-style: none; /* 隱藏原本醜醜的三角形 */
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+/* 隱藏 Chrome 預設的三角形 */
+.news-header::-webkit-details-marker {
+    display: none;
+}
+
+/* 標籤 (緊急/系統/活動) */
+.news-tag {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+    color: white;
+}
+.news-tag.red { background-color: #d32f2f; }
+.news-tag.blue { background-color: #1976d2; }
+.news-tag.green { background-color: #388e3c; }
+
+/* 標題文字 */
+.news-title {
+    flex: 1; /* 佔滿中間空間 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 文字太長自動變 ... */
+}
+
+/* 右邊的小箭頭 */
+.news-arrow {
+    font-size: 12px;
+    color: #999;
+    transition: transform 0.2s;
+}
+
+/* 當公告被展開時，箭頭旋轉 */
+.news-item[open] .news-arrow {
+    transform: rotate(180deg);
+}
+
+/* 展開後的內文區域 */
+.news-content {
+    padding: 0 15px 15px 15px;
+    color: #444;
+    font-size: 14px;
+    line-height: 1.6;
+    border-top: 1px dashed #eee;
+}

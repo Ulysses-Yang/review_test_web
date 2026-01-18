@@ -217,7 +217,7 @@ function updateUI(user) {
         
         const displayName = user.displayName || user.email.split('@')[0];
         document.getElementById('settings-user-info').innerText = `目前登入：${displayName} (${user.email})`;
-        document.getElementById('greeting-text').innerText = `嗨! ${displayName} 同學`;
+        document.getElementById('greeting-text').innerText = `嗨! ${displayName} `;
 
         if (user.email === ADMIN_EMAIL) {
             document.getElementById('teacher-section').style.display = 'block';
@@ -682,7 +682,7 @@ function loadComments(unitId) {
 
     unsubscribeChat = onSnapshot(q, (snap) => {
         if (snap.empty) {
-            listEl.innerHTML = '<div style="text-align:center;color:#999;margin-top:20px;">還沒有留言，來搶頭香吧！</div>';
+            listEl.innerHTML = '<div style="text-align:center;color:#999;margin-top:20px;">有問題都可以在這邊發問！</div>';
             return;
         }
 
@@ -780,3 +780,177 @@ window.addEventListener('resize', () => {
         }
     }
 });
+// ==========================
+// 10. 公告系統邏輯
+// ==========================
+
+// 1. 設定目標單元的 ID (已填入你提供的 ID)
+const TARGET_UNIT_ID = "KqKyCAZjDE2QpnxKcBvJ"; 
+
+// 2. 開啟公告彈窗
+const annoBar = document.getElementById('announcement-bar');
+const annoModal = document.getElementById('announcement-modal');
+const closeAnno = document.getElementById('close-announcement');
+
+// 綁定點擊首頁公告條
+if (annoBar) {
+    annoBar.onclick = () => {
+        if (annoModal) annoModal.style.display = 'flex';
+    };
+}
+
+// 綁定關閉按鈕
+if (closeAnno) {
+    closeAnno.onclick = () => {
+        if (annoModal) annoModal.style.display = 'none';
+    };
+}
+
+// 3. 跳轉到指定單元
+const btnGoTarget = document.getElementById('btn-go-to-target-unit');
+if (btnGoTarget) {
+    btnGoTarget.onclick = () => {
+        if (!TARGET_UNIT_ID) {
+            alert("尚未設定單元 ID");
+            return;
+        }
+
+        // 關閉彈窗
+        if (annoModal) annoModal.style.display = 'none';
+        
+        // 呼叫原本的單元跳轉函式
+        goToUnit(TARGET_UNIT_ID);
+    };
+}
+// ==========================
+// 11. 意見箱系統 (完整修復版)
+// ==========================
+
+console.log("正在初始化意見箱系統..."); // 1. 檢查程式有沒有跑到這
+
+// --- A. 變數宣告 ---
+const feedbackBar = document.getElementById('feedback-bar');       // 首頁綠色按鈕
+const feedbackModal = document.getElementById('feedback-modal');   // 填寫彈窗
+const closeFeedback = document.getElementById('close-feedback');   // 關閉 X
+const btnSubmitFeedback = document.getElementById('btn-submit-feedback'); // 送出按鈕
+const feedbackInput = document.getElementById('feedback-input');   // 輸入框
+
+// --- B. 綁定事件 (使用者填寫端) ---
+
+// 1. 打開意見箱
+if (feedbackBar) {
+    feedbackBar.onclick = () => {
+        console.log("點擊了意見箱！"); // 2. 檢查點擊有沒有反應
+        if (feedbackModal) {
+            feedbackModal.style.display = 'flex';
+        } else {
+            console.error("找不到 feedback-modal 彈窗元素！");
+        }
+    };
+} else {
+    console.error("找不到 feedback-bar 按鈕元素！(請檢查 HTML ID)");
+}
+
+// 2. 關閉意見箱
+if (closeFeedback) {
+    closeFeedback.onclick = () => {
+        if (feedbackModal) feedbackModal.style.display = 'none';
+    };
+}
+
+// 3. 送出意見
+if (btnSubmitFeedback) {
+    btnSubmitFeedback.onclick = async () => {
+        const text = feedbackInput.value.trim();
+        if (!text) {
+            alert("請輸入內容喔！");
+            return;
+        }
+
+        // 按鈕變更狀態避免重複按
+        const originalText = btnSubmitFeedback.innerText;
+        btnSubmitFeedback.innerText = "傳送中...";
+        btnSubmitFeedback.disabled = true;
+
+        try {
+            // 寫入 Firestore
+            // 確保上方有 import { addDoc, collection, serverTimestamp }
+            await addDoc(collection(db, "feedback"), {
+                content: text,
+                uid: auth.currentUser ? auth.currentUser.uid : "anonymous",
+                email: auth.currentUser ? auth.currentUser.email : "訪客",
+                timestamp: serverTimestamp()
+            });
+
+            alert("感謝您的意見！我們會認真閱讀 ❤️");
+            feedbackInput.value = ""; // 清空
+            feedbackModal.style.display = 'none'; // 關閉
+        } catch (e) {
+            console.error("傳送失敗", e);
+            alert("傳送失敗：" + e.message);
+        } finally {
+            // 恢復按鈕
+            btnSubmitFeedback.innerText = originalText;
+            btnSubmitFeedback.disabled = false;
+        }
+    };
+}
+
+
+// --- C. 管理員部分 (查看意見) ---
+
+const btnCheckFeedback = document.getElementById('btn-check-feedback');
+
+if (btnCheckFeedback) {
+    btnCheckFeedback.onclick = loadFeedbackList;
+}
+
+// 載入列表函式
+async function loadFeedbackList() {
+    const adminModal = document.getElementById('admin-feedback-modal');
+    const listContainer = document.getElementById('admin-feedback-list');
+    
+    if (adminModal) adminModal.style.display = 'flex';
+    if (listContainer) listContainer.innerHTML = '<div class="loading-text">載入留言中...</div>';
+
+    try {
+        const q = query(collection(db, "feedback"), orderBy("timestamp", "desc"), limit(20));
+        const querySnapshot = await getDocs(q);
+        
+        if (listContainer) listContainer.innerHTML = "";
+
+        if (querySnapshot.empty) {
+            if (listContainer) listContainer.innerHTML = '<div class="center-msg">目前沒有任何意見留言 🍃</div>';
+            return;
+        }
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            let timeStr = "剛剛";
+            if (data.timestamp) {
+                timeStr = new Date(data.timestamp.toDate()).toLocaleString();
+            }
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'feedback-item';
+            itemDiv.innerHTML = `
+                <div style="font-weight:bold; color:#333;">${data.email || '訪客'}</div>
+                <div style="margin: 5px 0; color:#555;">${data.content}</div>
+                <div class="feedback-time">${timeStr}</div>
+            `;
+            listContainer.appendChild(itemDiv);
+        });
+
+    } catch (e) {
+        console.error("讀取失敗", e);
+        if (listContainer) listContainer.innerHTML = '<div class="center-msg">讀取失敗，請確認權限或網路</div>';
+    }
+}
+
+// 關閉管理員彈窗
+const closeAdminFeedback = document.getElementById('close-admin-feedback');
+if (closeAdminFeedback) {
+    closeAdminFeedback.onclick = () => {
+        document.getElementById('admin-feedback-modal').style.display = 'none';
+    };
+}
