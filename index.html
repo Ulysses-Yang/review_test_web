@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -124,11 +125,16 @@
     </div>
 
     <div class="bottom-action-area">
-        <div id="chat-input-area" class="input-row" style="display: none;">
-            <input type="text" id="comment-input" class="chat-input" placeholder="輸入問題...">
-            <button class="send-btn" id="btn-send-comment">送出</button>
-        </div>
-        </div>
+    <div id="chat-input-area" class="input-row" style="display: none;">
+        <input type="text" id="comment-input" class="chat-input" placeholder="輸入問題...">
+        <button class="send-btn" id="btn-send-comment">送出</button>
+    </div>
+
+    <div id="chat-auth-hint" class="auth-hint-box" style="display: flex;">
+        <span>請先註冊或登入以參與討論</span>
+        <button class="btn-sm-login" id="btn-quick-login">登入 / 註冊</button>
+    </div>
+</div>
 </div>
         </div>
     </div>
