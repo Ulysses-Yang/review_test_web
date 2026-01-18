@@ -700,42 +700,73 @@ async function quickNotify(tab) {
     }
 }
 // ==========================
-// 9. 手機鍵盤優化 (仿 LINE 行為)
+// 9. 手機鍵盤優化 (仿 LINE 行為 - 加強版)
 // ==========================
 
 const chatInput = document.getElementById('comment-input');
-const chatList = document.getElementById('chat-list'); // 這裡定義了 chatList
+const chatList = document.getElementById('chat-list');
 
 // 定義一個強制的「捲到底部」函式
 function forceScrollToBottom() {
-    setTimeout(() => {
-        // ▼▼▼ 修改這裡：把 listEl 改成 chatList ▼▼▼
-        const lastMsg = chatList.lastElementChild; 
-        if (lastMsg) {
-            // 使用 scrollIntoView 讓最後一則訊息出現在畫面可視區
-            lastMsg.scrollIntoView({ behavior: "smooth", block: "end" });
-        }
-    }, 100); 
+    // 只有在「聊天分頁」開啟時才執行
+    const panelChat = document.getElementById('panel-chat');
+    if (!panelChat || !panelChat.classList.contains('active-panel')) return;
+
+    // 抓取最後一則留言
+    const lastMsg = chatList.lastElementChild;
+    if (!lastMsg) return;
+
+    // 策略：嘗試多次捲動，以配合不同手機鍵盤彈出的速度
     
-    // 保險起見，300ms 後再捲一次
+    // 1. 馬上捲動 (反應快的手機)
+    lastMsg.scrollIntoView({ block: "end", behavior: "auto" });
+
+    // 2. 延遲 100ms (鍵盤動畫剛開始)
     setTimeout(() => {
-        // ▼▼▼ 修改這裡：把 listEl 改成 chatList ▼▼▼
-        const lastMsg = chatList.lastElementChild;
-        if (lastMsg) {
-            lastMsg.scrollIntoView({ behavior: "smooth", block: "end" });
-        }
+        lastMsg.scrollIntoView({ block: "end", behavior: "smooth" });
+    }, 100);
+
+    // 3. 延遲 300ms (鍵盤動畫結束，這是最關鍵的時間點)
+    setTimeout(() => {
+        lastMsg.scrollIntoView({ block: "end", behavior: "smooth" });
     }, 300);
+    
+    // 4. 延遲 500ms (針對比較慢的老舊手機)
+    setTimeout(() => {
+        lastMsg.scrollIntoView({ block: "end", behavior: "smooth" });
+    }, 500);
 }
 
-// 1. 當點擊輸入框 (鍵盤彈出) 時，強制捲動
+// 監聽器設定
+
 if (chatInput) {
+    // A. 針對 iOS/Android：當手指點擊輸入框 (Focus) 時
     chatInput.addEventListener('focus', forceScrollToBottom);
+    
+    // B. 額外保險：當點擊輸入框時也觸發 (有些瀏覽器 focus 慢)
+    chatInput.addEventListener('click', forceScrollToBottom);
 }
 
-// 2. 當視窗大小改變 (Android 鍵盤彈出) 時，強制捲動
+// C. 針對 Android：當鍵盤彈出導致視窗變矮 (Resize) 時
 window.addEventListener('resize', () => {
-    const isChatActive = document.getElementById('panel-chat').classList.contains('active-panel');
-    if (isChatActive) {
-        forceScrollToBottom();
+    // 檢查目前是否在聊天頁面
+    const panelChat = document.getElementById('panel-chat');
+    if (panelChat && panelChat.classList.contains('active-panel')) {
+        // 如果視窗高度明顯變小 (代表鍵盤彈出來了)，就捲動
+        if (window.innerHeight < 600) { 
+             forceScrollToBottom();
+        }
     }
 });
+
+// D. 每次送出留言後，也要強制捲到底
+const btnSendComment = document.getElementById('btn-send-comment');
+if (btnSendComment) {
+    // 這裡原本可能有你的送出邏輯，請確保送出後呼叫 forceScrollToBottom()
+    btnSendComment.addEventListener('click', () => {
+        // (送出資料的程式碼...)
+        
+        // 送出後強制捲動
+        forceScrollToBottom();
+    });
+}
