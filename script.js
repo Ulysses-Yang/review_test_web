@@ -172,7 +172,7 @@ function renderPdfViewer(type, url) {
     dlBtn.onclick = () => { if(url) window.open(url, '_blank'); };
 
     if (!url) {
-        viewer.innerHTML = `<div class="center-msg">尚未上傳檔案</div>`;
+        viewer.innerHTML = `<div class="center-msg"><p>尚未上傳檔案</p><p>若急需可直接留言或到意見箱反應</p></div>`;
         dlBtn.style.display = 'none';
         return;
     }
@@ -882,7 +882,7 @@ if (btnSubmitFeedback) {
                 timestamp: serverTimestamp()
             });
 
-            alert("感謝您的意見！我們會認真閱讀 ❤️");
+            alert("感謝您的意見！我們會認真閱讀");
             feedbackInput.value = ""; // 清空
             feedbackModal.style.display = 'none'; // 關閉
         } catch (e) {
