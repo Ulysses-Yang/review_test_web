@@ -1,7 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, getDoc, doc, where, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+// ▼ 新增 updateDoc
+import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, getDoc, doc, where, addDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// ▼ 新增 Storage 相關功能
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 // ▼▼▼ Firebase Config (使用你提供的) ▼▼▼
 const firebaseConfig = {
   apiKey: "AIzaSyA4rX2ZjJqto9Eyv4G_xdlAdYAH3uJCMBo",
@@ -16,6 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const ADMIN_EMAIL = "ulysses950710@gmail.com";
 
 // 全域變數
@@ -177,26 +180,33 @@ function renderPdfViewer(type, url) {
 // 留言載入
 function loadComments(unitId) {
     if (unsubscribeChat) unsubscribeChat();
-    const q = query(collection(db, 'units', unitId, 'comments'), orderBy('createdAt', 'desc'));
-    const listEl = document.getElementById('chat-list');
+// ▼▼▼ 改成 asc (Ascending: 舊 -> 新) ▼▼▼
+const q = query(collection(db, 'units', unitId, 'comments'), orderBy('createdAt', 'asc'));    const listEl = document.getElementById('chat-list');
 
     unsubscribeChat = onSnapshot(q, (snap) => {
-        if (snap.empty) {
-            listEl.innerHTML = '<div style="text-align:center;color:#999;margin-top:20px;">還沒有留言，來搶頭香吧！</div>';
-            return;
-        }
-        let html = '';
-        snap.forEach(doc => {
-            const data = doc.data();
-            const name = data.userName || data.userEmail.split('@')[0];
-            html += `
-                <div class="comment-item">
-                    <div class="comment-user">${name}:</div>
-                    <div class="comment-text">${data.text}</div>
-                </div>`;
-        });
-        listEl.innerHTML = html;
+    if (snap.empty) {
+        listEl.innerHTML = '<div style="text-align:center;color:#999;margin-top:20px;">還沒有留言，來搶頭香吧！</div>';
+        return;
+    }
+    let html = '';
+    snap.forEach(doc => {
+        const data = doc.data();
+        const name = data.userName || data.userEmail.split('@')[0];
+        // 判斷是否為自己的留言 (加上樣式區隔，選用)
+        const isMe = window.currentUser && data.userEmail === window.currentUser.email;
+        
+        // 這裡可以簡單加上背景色區分，或是維持原本樣式
+        html += `
+            <div class="comment-item" style="${isMe ? 'background:#e3f2fd; margin-left:20%;' : ''}">
+                <div class="comment-user" style="font-weight:bold; color:#555;">${name}:</div>
+                <div class="comment-text">${data.text}</div>
+            </div>`;
     });
+    listEl.innerHTML = html;
+
+    // ▼▼▼ 新增：自動捲動到最底部 ▼▼▼
+    listEl.scrollTop = listEl.scrollHeight;
+});
 }
 
 // 發送留言
@@ -402,8 +412,9 @@ document.getElementById('notif-btn').onclick = async () => {
         
         snap.forEach(doc => {
             const data = doc.data();
-            if (window.currentUser && data.senderEmail === window.currentUser.email) return;
-
+if (data.type === 'comment' && window.currentUser && data.senderEmail === window.currentUser.email) {
+        return; 
+    }
             const isNew = (data.createdAt?.toMillis() || 0) > lastRead;
             const date = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleString() : '';
             
@@ -434,15 +445,35 @@ function closeNotifications() {
 }
 
 function listenNotifications() {
-    const lastRead = parseInt(localStorage.getItem('lastReadTime') || '0');
+    // 建立監聽 (只抓最新的 50 筆通知)
     const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(50));
-    onSnapshot(q, (snap) => {
+    
+    // 如果之前有監聽器，先取消 (避免重複監聽導致閃爍)
+    if (window.unsubscribeNotif) window.unsubscribeNotif();
+
+    window.unsubscribeNotif = onSnapshot(q, (snap) => {
+        // 每次資料庫有變動，都重新從 LocalStorage 讀取一次「最後已讀時間」
+        const lastRead = parseInt(localStorage.getItem('lastReadTime') || '0');
+        
         const count = snap.docs.filter(doc => {
             const d = doc.data();
-            const isNew = (d.createdAt?.toMillis() || 0) > lastRead;
+            
+            // 1. 處理時間戳記 (關鍵修正！)
+            // 如果是剛寫入的資料，createdAt 可能是 null，這時我們視為 Date.now() (最新)，確保紅點會亮
+            const msgTime = d.createdAt ? d.createdAt.toMillis() : Date.now();
+            const isNew = msgTime > lastRead;
+            
+            // 2. 判斷是否顯示紅點
+            const isBroadcast = d.type === 'file'; // 老師廣播 (所有人都要看)
+            
+            // 判斷是否為「別人」發的 (如果還沒登入，預設當作別人發的)
             const notMe = window.currentUser ? d.senderEmail !== window.currentUser.email : true;
-            return isNew && notMe;
+            
+            // 邏輯：(是新訊息) 且 (是廣播 或 是別人發的留言)
+            return isNew && (isBroadcast || notMe);
         }).length;
+        
+        // 控制紅點顯示
         const badge = document.getElementById('badge');
         if (count > 0) {
             badge.style.display = 'flex';
@@ -462,42 +493,208 @@ window.handleNotificationClick = (unitId, tab) => {
     }
 };
 
+
 // ==========================
-// 6. 老師後台功能 (維持不變)
+// 8. 整合版：老師後台管理邏輯 (智慧表單)
 // ==========================
+
+const adminSelect = document.getElementById('admin-unit-select');
+const inputSubject = document.getElementById('input-subject');
+const inputOrder = document.getElementById('input-order');
+const inputTitle = document.getElementById('input-title');
+const inputFileQ = document.getElementById('input-file-q');
+const inputFileA = document.getElementById('input-file-a');
+const btnSubmit = document.getElementById('btn-submit-unit');
+const statusText = document.getElementById('admin-status');
+
+// 暫存資料用
+let adminUnitsData = {}; 
+
+// A. 讀取單元列表並填入下拉選單
 async function fetchUnitsForAdmin() {
     const q = query(collection(db, 'units'), orderBy('order', 'asc'));
     const snap = await getDocs(q);
-    const select = document.getElementById('admin-unit-select');
-    select.innerHTML = '';
+    
+    // 保留前兩個選項 (建立新單元 & 分隔線)
+    adminSelect.innerHTML = `
+        <option value="NEW_UNIT">➕ 建立全新單元 (預設)</option>
+        <option disabled>--- 或選擇下方舊單元進行編輯 ---</option>
+    `;
+    adminUnitsData = {}; // 重置暫存
+
     snap.forEach(doc => {
+        const data = doc.data();
+        adminUnitsData[doc.id] = data; // 存起來等下用
+        
         const opt = document.createElement('option');
         opt.value = doc.id;
-        opt.text = doc.data().title;
-        opt.dataset.title = doc.data().title;
-        select.appendChild(opt);
+        opt.text = `${data.subject === 'math'?'📐':'🧪'} ${data.order}. ${data.title}`;
+        adminSelect.appendChild(opt);
     });
 }
 
-document.getElementById('btn-upload-q').onclick = () => simulateTeacherUpload('question');
-document.getElementById('btn-upload-a').onclick = () => simulateTeacherUpload('answer');
+// B. 當下拉選單改變時 -> 自動填入表單
+adminSelect.onchange = () => {
+    const unitId = adminSelect.value;
+    const currentQ = document.getElementById('current-q-link');
+    const currentA = document.getElementById('current-a-link');
 
-async function simulateTeacherUpload(type) {
-    const select = document.getElementById('admin-unit-select');
-    const unitId = select.value;
-    if (!unitId) return alert('請選擇單元');
-    const title = select.options[select.selectedIndex].dataset.title;
-    const isQ = type === 'question';
+    if (unitId === 'NEW_UNIT') {
+        // 切換到「新增模式」：清空表單
+        inputSubject.value = 'math';
+        inputOrder.value = '';
+        inputTitle.value = '';
+        inputFileQ.value = '';
+        inputFileA.value = '';
+        currentQ.innerText = '';
+        currentA.innerText = '';
+        btnSubmit.innerText = "🚀 建立並上架";
+        btnSubmit.style.backgroundColor = "#ff9800"; // 橘色
+    } else {
+        // 切換到「編輯模式」：填入舊資料
+        const data = adminUnitsData[unitId];
+        if (data) {
+            inputSubject.value = data.subject || 'math';
+            inputOrder.value = data.order || '';
+            inputTitle.value = data.title || '';
+            
+            // 顯示目前是否有檔案
+            currentQ.innerText = data.questionPdf ? "✅ 目前已有題目卷 (上傳新檔案可覆蓋)" : "❌ 目前無題目卷";
+            currentA.innerText = data.answerPdf ? "✅ 目前已有詳解卷 (上傳新檔案可覆蓋)" : "❌ 目前無詳解卷";
+            
+            btnSubmit.innerText = "💾 儲存修改 / 更新檔案";
+            btnSubmit.style.backgroundColor = "#4caf50"; // 綠色
+        }
+    }
+};
+
+// C. 送出按鈕 (同時處理 新增 與 更新)
+btnSubmit.onclick = async () => {
+    const unitId = adminSelect.value;
+    const isNew = unitId === 'NEW_UNIT';
+    
+    // 1. 驗證
+    if (!inputTitle.value || !inputOrder.value) {
+        return alert('標題與順序為必填！');
+    }
+
+    // 2. UI 鎖定
+    btnSubmit.disabled = true;
+    const originalText = btnSubmit.innerText;
+    btnSubmit.innerText = "⏳ 處理中...";
+    statusText.innerText = "正在上傳與寫入...";
+
     try {
-        await addDoc(collection(db, 'notifications'), {
-            type: 'file',
-            title: isQ ? '📄 題目卷' : '✅ 詳解卷',
-            body: `單元「${title}」已經更新${isQ ? '題目' : '詳解'}囉！`,
-            unitId: unitId,
-            senderEmail: window.currentUser.email,
-            targetTab: type,
-            createdAt: serverTimestamp()
-        });
-        alert('已發送通知！');
-    } catch (e) { alert(e.message); }
+        // 3. 定義上傳函式
+        const uploadFile = async (file, folder) => {
+            if (!file) return null; // 沒選檔案回傳 null
+            statusText.innerText = `上傳中：${file.name}...`;
+            const fileName = `${Date.now()}_${file.name}`;
+            const storageRef = ref(storage, `pdfs/${folder}/${fileName}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            return await getDownloadURL(snapshot.ref);
+        };
+
+        // 4. 執行上傳 (若沒選檔案，變數會是 null)
+        const qUrl = await uploadFile(inputFileQ.files[0], 'questions');
+        const aUrl = await uploadFile(inputFileA.files[0], 'answers');
+
+        // 5. 準備要寫入的資料物件
+        let docData = {
+            title: inputTitle.value.trim(),
+            order: parseFloat(inputOrder.value),
+            subject: inputSubject.value
+        };
+
+        // 只有當「有上傳新檔案」時，才更新資料庫裡的網址
+        // 如果是新增模式，且沒上傳，預設給空字串
+        if (isNew) {
+            docData.questionPdf = qUrl || '';
+            docData.answerPdf = aUrl || '';
+            docData.createdAt = serverTimestamp();
+        } else {
+            // 編輯模式：只有當 qUrl 有值時才更新該欄位，否則維持原樣 (Firebase updateDoc 特性)
+            if (qUrl) docData.questionPdf = qUrl;
+            if (aUrl) docData.answerPdf = aUrl;
+        }
+
+        // 6. 寫入資料庫
+        if (isNew) {
+            statusText.innerText = "正在建立新單元...";
+            const newDoc = await addDoc(collection(db, 'units'), docData);
+            // 為了發通知，抓一下新 ID
+            await sendNotification('create', inputTitle.value, newDoc.id);
+            alert('🎉 新單元建立成功！');
+        } else {
+            statusText.innerText = "正在更新單元...";
+            await updateDoc(doc(db, 'units', unitId), docData);
+            
+            // 判斷要發什麼通知
+            if (qUrl) await sendNotification('update', inputTitle.value, unitId, 'question');
+            if (aUrl) await sendNotification('update', inputTitle.value, unitId, 'answer');
+            if (!qUrl && !aUrl) alert('✅ 文字資料更新成功 (未更新檔案)');
+            else alert('🎉 更新成功並已發送通知！');
+        }
+
+        // 7. 重置畫面
+        document.getElementById('input-file-q').value = ''; // 清空檔案選擇
+        document.getElementById('input-file-a').value = '';
+        statusText.innerText = "✅ 完成";
+        fetchUnitsForAdmin(); // 重新抓列表 (如果有新增單元才看得到)
+        
+        // 如果是新增完，切換回預設狀態
+        if(isNew) {
+            inputTitle.value = '';
+            inputOrder.value = '';
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("錯誤：" + e.message);
+        statusText.innerText = "❌ 失敗";
+    } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = originalText;
+    }
+};
+
+// D. 輔助函式：發送通知
+async function sendNotification(action, title, unitId, tab = 'question') {
+    let bodyText = '';
+    let notifTitle = '';
+    
+    if (action === 'create') {
+        notifTitle = '✨ 新單元上架';
+        bodyText = `新增了單元：「${title}」，快來練習吧！`;
+    } else {
+        notifTitle = tab === 'question' ? '📄 題目卷更新' : '✅ 詳解卷更新';
+        bodyText = `單元「${title}」內容已更新！`;
+    }
+
+    await addDoc(collection(db, 'notifications'), {
+        type: 'file',
+        title: notifTitle,
+        body: bodyText,
+        unitId: unitId,
+        senderEmail: window.currentUser.email,
+        targetTab: tab,
+        createdAt: serverTimestamp()
+    });
+}
+
+// E. 快速通知按鈕 (僅通知，不改資料)
+document.getElementById('btn-quick-notify-q').onclick = () => quickNotify('question');
+document.getElementById('btn-quick-notify-a').onclick = () => quickNotify('answer');
+
+async function quickNotify(tab) {
+    const unitId = adminSelect.value;
+    if (unitId === 'NEW_UNIT') return alert('請先選擇一個舊單元');
+    
+    const title = inputTitle.value;
+    const confirmSend = confirm(`確定要發送「${title}」的${tab==='question'?'題目':'詳解'}更新通知嗎？\n(不會修改檔案)`);
+    
+    if (confirmSend) {
+        await sendNotification('update', title, unitId, tab);
+        alert('通知已發送！');
+    }
 }
