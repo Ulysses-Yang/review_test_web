@@ -144,13 +144,25 @@ document.querySelectorAll('.tab').forEach(t => {
     t.onclick = () => switchTab(t.dataset.tab);
 });
 
+// ==========================
+// 修改後的 Tab 切換功能
+// ==========================
 function switchTab(tabName) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
     
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
     const target = document.getElementById(`panel-${tabName}`);
-    target.classList.add('active-panel');
+    if (target) {
+        target.classList.add('active-panel');
+    }
+
+    // ▼▼▼ 新增：如果是切換到「討論區」，強制捲到底部 ▼▼▼
+    if (tabName === 'chat') {
+        setTimeout(() => {
+            forceScrollToBottom();
+        }, 50); // 給一點時間讓 display:flex 生效
+    }
 }
 
 function renderPdfViewer(type, url) {
@@ -178,73 +190,7 @@ function renderPdfViewer(type, url) {
     }
 }
 
-// 留言載入
-function loadComments(unitId) {
-    if (unsubscribeChat) unsubscribeChat();
-// ▼▼▼ 改成 asc (Ascending: 舊 -> 新) ▼▼▼
-const q = query(collection(db, 'units', unitId, 'comments'), orderBy('createdAt', 'asc'));    const listEl = document.getElementById('chat-list');
 
-    unsubscribeChat = onSnapshot(q, (snap) => {
-    if (snap.empty) {
-        listEl.innerHTML = '<div style="text-align:center;color:#999;margin-top:20px;">還沒有留言，來搶頭香吧！</div>';
-        return;
-    }
-    let html = '';
-    snap.forEach(doc => {
-        const data = doc.data();
-        const name = data.userName || data.userEmail.split('@')[0];
-        // 判斷是否為自己的留言 (加上樣式區隔，選用)
-        const isMe = window.currentUser && data.userEmail === window.currentUser.email;
-        
-        // 這裡可以簡單加上背景色區分，或是維持原本樣式
-        html += `
-            <div class="comment-item" style="${isMe ? 'background:#e3f2fd; margin-left:20%;' : ''}">
-                <div class="comment-user" style="font-weight:bold; color:#555;">${name}:</div>
-                <div class="comment-text">${data.text}</div>
-            </div>`;
-    });
-    listEl.innerHTML = html;
-
-    // ▼▼▼ 新增：自動捲動到最底部 ▼▼▼
-    listEl.scrollTop = listEl.scrollHeight;
-});
-}
-
-// 發送留言
-document.getElementById('comment-input').addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') sendComment();
-});
-document.getElementById('btn-send-comment').onclick = sendComment;
-
-async function sendComment() {
-    const input = document.getElementById('comment-input');
-    const text = input.value.trim();
-    if (!text) return;
-    if (!window.currentUser) return alert('請先登入');
-
-    const user = window.currentUser;
-    const name = user.displayName || user.email.split('@')[0];
-
-    try {
-        await addDoc(collection(db, 'units', window.currentUnitId, 'comments'), {
-            text: text,
-            userEmail: user.email,
-            userName: name,
-            createdAt: serverTimestamp()
-        });
-        
-        await addDoc(collection(db, 'notifications'), {
-            type: 'comment',
-            title: `💬 ${window.currentUnitData.title} 有新留言`,
-            body: `${name}: ${text}`,
-            unitId: window.currentUnitId,
-            targetTab: 'chat',
-            createdAt: serverTimestamp(),
-            senderEmail: user.email
-        });
-        input.value = '';
-    } catch (e) { console.error(e); alert('留言失敗'); }
-}
 
 // ==========================
 // 4. 身份驗證 (Auth) - 已更新
@@ -699,74 +645,138 @@ async function quickNotify(tab) {
         alert('通知已發送！');
     }
 }
-// ==========================
-// 9. 手機鍵盤優化 (仿 LINE 行為 - 加強版)
-// ==========================
+// ==========================================
+// 留言區核心邏輯 (包含：載入、發送、鍵盤優化)
+// 請用這整段替換原本的 loadComments, sendComment 及 Section 9
+// ==========================================
 
-const chatInput = document.getElementById('comment-input');
-const chatList = document.getElementById('chat-list');
-
-// 定義一個強制的「捲到底部」函式
+// --- 1. 強制捲動工具 (解決鍵盤遮擋的核心) ---
 function forceScrollToBottom() {
-    // 只有在「聊天分頁」開啟時才執行
+    const listEl = document.getElementById('chat-list');
     const panelChat = document.getElementById('panel-chat');
-    if (!panelChat || !panelChat.classList.contains('active-panel')) return;
-
-    // 抓取最後一則留言
-    const lastMsg = chatList.lastElementChild;
-    if (!lastMsg) return;
-
-    // 策略：嘗試多次捲動，以配合不同手機鍵盤彈出的速度
     
-    // 1. 馬上捲動 (反應快的手機)
-    lastMsg.scrollIntoView({ block: "end", behavior: "auto" });
+    // 防呆：只有在聊天分頁開啟時才執行
+    if (!listEl || !panelChat || !panelChat.classList.contains('active-panel')) return;
 
-    // 2. 延遲 100ms (鍵盤動畫剛開始)
-    setTimeout(() => {
-        lastMsg.scrollIntoView({ block: "end", behavior: "smooth" });
-    }, 100);
+    // 策略：分四階段捲動，確保追上鍵盤彈出的動畫速度
+    // 0ms (馬上)
+    listEl.scrollTop = listEl.scrollHeight;
 
-    // 3. 延遲 300ms (鍵盤動畫結束，這是最關鍵的時間點)
-    setTimeout(() => {
-        lastMsg.scrollIntoView({ block: "end", behavior: "smooth" });
-    }, 300);
+    // 100ms (動畫開始)
+    setTimeout(() => { listEl.scrollTop = listEl.scrollHeight; }, 100);
+
+    // 300ms (動畫結束 - 最關鍵)
+    setTimeout(() => { listEl.scrollTop = listEl.scrollHeight; }, 300);
     
-    // 4. 延遲 500ms (針對比較慢的老舊手機)
-    setTimeout(() => {
-        lastMsg.scrollIntoView({ block: "end", behavior: "smooth" });
-    }, 500);
+    // 500ms (保險)
+    setTimeout(() => { listEl.scrollTop = listEl.scrollHeight; }, 500);
 }
 
-// 監聽器設定
+// --- 2. 載入留言 ---
+function loadComments(unitId) {
+    if (unsubscribeChat) unsubscribeChat();
 
-if (chatInput) {
-    // A. 針對 iOS/Android：當手指點擊輸入框 (Focus) 時
-    chatInput.addEventListener('focus', forceScrollToBottom);
-    
-    // B. 額外保險：當點擊輸入框時也觸發 (有些瀏覽器 focus 慢)
-    chatInput.addEventListener('click', forceScrollToBottom);
+    // 設定：舊的在上面，新的在下面 (asc)
+    const q = query(collection(db, 'units', unitId, 'comments'), orderBy('createdAt', 'asc'));
+    const listEl = document.getElementById('chat-list');
+
+    unsubscribeChat = onSnapshot(q, (snap) => {
+        if (snap.empty) {
+            listEl.innerHTML = '<div style="text-align:center;color:#999;margin-top:20px;">還沒有留言，來搶頭香吧！</div>';
+            return;
+        }
+
+        let html = '';
+        snap.forEach(doc => {
+            const data = doc.data();
+            const name = data.userName || data.userEmail.split('@')[0];
+            const isMe = window.currentUser && data.userEmail === window.currentUser.email;
+            
+            html += `
+                <div class="comment-item" style="${isMe ? 'background:#e3f2fd; margin-left:20%;' : ''}">
+                    <div class="comment-user" style="font-weight:bold; color:#555;">${name}:</div>
+                    <div class="comment-text">${data.text}</div>
+                </div>`;
+        });
+        
+        listEl.innerHTML = html;
+
+        // 資料載入完成後，執行捲動
+        setTimeout(() => {
+            forceScrollToBottom();
+        }, 50);
+    });
 }
 
-// C. 針對 Android：當鍵盤彈出導致視窗變矮 (Resize) 時
+// --- 3. 發送留言 ---
+const commentInput = document.getElementById('comment-input');
+const btnSend = document.getElementById('btn-send-comment');
+
+// 綁定鍵盤 Enter 發送
+if (commentInput) {
+    commentInput.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') sendComment();
+    });
+
+    // ▼▼▼ 關鍵：點擊輸入框時 (鍵盤彈出)，觸發捲動 ▼▼▼
+    commentInput.addEventListener('focus', forceScrollToBottom);
+    commentInput.addEventListener('click', forceScrollToBottom);
+}
+
+if (btnSend) {
+    btnSend.onclick = sendComment;
+}
+
+async function sendComment() {
+    const input = document.getElementById('comment-input');
+    const text = input.value.trim();
+    
+    if (!text) return;
+    if (!window.currentUser) return alert('請先登入');
+
+    const user = window.currentUser;
+    const name = user.displayName || user.email.split('@')[0];
+
+    try {
+        // 先清空輸入框並保持 focus
+        input.value = '';
+        input.focus(); 
+
+        // 1. 寫入留言
+        await addDoc(collection(db, 'units', window.currentUnitId, 'comments'), {
+            text: text,
+            userEmail: user.email,
+            userName: name,
+            createdAt: serverTimestamp()
+        });
+        
+        // 2. 寫入通知
+        await addDoc(collection(db, 'notifications'), {
+            type: 'comment',
+            title: `💬 ${window.currentUnitData.title} 有新留言`,
+            body: `${name}: ${text}`,
+            unitId: window.currentUnitId,
+            targetTab: 'chat',
+            createdAt: serverTimestamp(),
+            senderEmail: user.email
+        });
+
+        // 3. 送出後再次確認捲到底部
+        forceScrollToBottom();
+
+    } catch (e) { 
+        console.error(e); 
+        alert('留言失敗'); 
+    }
+}
+
+// --- 4. 針對 Android 鍵盤/視窗變形的額外監聽 ---
 window.addEventListener('resize', () => {
-    // 檢查目前是否在聊天頁面
     const panelChat = document.getElementById('panel-chat');
+    // 如果聊天分頁開著，且視窗高度變很小(鍵盤彈出)，就捲動
     if (panelChat && panelChat.classList.contains('active-panel')) {
-        // 如果視窗高度明顯變小 (代表鍵盤彈出來了)，就捲動
         if (window.innerHeight < 600) { 
              forceScrollToBottom();
         }
     }
 });
-
-// D. 每次送出留言後，也要強制捲到底
-const btnSendComment = document.getElementById('btn-send-comment');
-if (btnSendComment) {
-    // 這裡原本可能有你的送出邏輯，請確保送出後呼叫 forceScrollToBottom()
-    btnSendComment.addEventListener('click', () => {
-        // (送出資料的程式碼...)
-        
-        // 送出後強制捲動
-        forceScrollToBottom();
-    });
-}

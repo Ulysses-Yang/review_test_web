@@ -92,10 +92,28 @@ body {
 .tab { flex: 1; padding: 15px 0; text-align: center; cursor: pointer; color: #666; font-size: 16px; }
 .tab.active { border-bottom: 3px solid #007AFF; color: #007AFF; font-weight: bold; }
 
-.content-area { flex: 1; background: #f9f9f9; overflow-y: auto; position: relative; }
-.panel { height: 100%; display: none; flex-direction: column; }
+.content-area { 
+    flex: 1; 
+    background: #f9f9f9; 
+    overflow: hidden;       /* 關鍵：外層不要捲動 */
+    position: relative; 
+    display: flex;          /* 關鍵：讓內部 Panel 可以充滿高度 */
+    flex-direction: column; 
+}
+/* 修改：讓 Panel 負責捲動 */
+.panel { 
+    height: 100%; 
+    display: none; 
+    flex-direction: column; 
+    overflow-y: auto;       /* 關鍵：一般分頁在這裡捲動 */
+    -webkit-overflow-scrolling: touch; /* 讓手機滑動順暢 */
+}
 .panel.active-panel { display: flex; }
-#panel-chat.active-panel { display: block; }
+/* 修改：聊天分頁外層鎖住，不要捲動 */
+#panel-chat.active-panel { 
+    display: flex; 
+    overflow: hidden; 
+}
 
 .download-bar { padding: 12px; text-align: center; border-bottom: 1px solid #ddd; background: #e3f2fd; color: #1565c0; font-weight: bold; cursor: pointer; }
 .download-bar.answer { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
@@ -103,17 +121,18 @@ body {
 
 /* 留言板 */
 /* 修改留言板容器 */
+/* 修改：讓聊天列表自己捲動 */
 .chat-container {
     padding: 15px;
-    padding-bottom: 85px; /* 預留底部空間給輸入框，避免被擋住 */
+    padding-bottom: 120px;   /* 加大底部空間，確保最後一則不被輸入框擋住 */
     
-    /* ▼▼▼ 關鍵修改：讓訊息往下沉 ▼▼▼ */
-    min-height: 100%;          /* 強制高度至少佔滿整個畫面 */
-    box-sizing: border-box;    /* 讓 padding 包含在高度內，避免跑版 */
+    flex: 1;                 /* 佔滿剩餘空間 */
+    overflow-y: auto;        /* 關鍵：捲軸真正的位置在這裡 */
+    -webkit-overflow-scrolling: touch;
     
-    display: flex;             /* 開啟彈性排版 */
-    flex-direction: column;    /* 直向排列 */
-    justify-content: flex-end; /* 讓內容「靠下對齊」 */
+    display: flex;
+    flex-direction: column;
+    /* 移除 justify-content: flex-end; 避免內容少時被擠到底部，或內容多時頂部被切掉 */
 }
 .comment-item { background: #fff; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 .comment-user { font-size: 12px; color: #888; margin-bottom: 4px; }
