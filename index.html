@@ -3,159 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>學習練習 App (網頁版)</title>
+    <title>學習練習 App</title>
+    <link rel="stylesheet" href="style.css">
+    
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    
-    <style>
-        /* --- 全域樣式 --- */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-            padding-bottom: constant(safe-area-inset-bottom);
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        /* 導覽列 */
-        .header {
-            background-color: #fff;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header-title { font-size: 18px; font-weight: bold; color: #333; }
-        .icon-btn { font-size: 24px; color: #333; cursor: pointer; display: flex; align-items: center; }
-        
-        .badge {
-            position: absolute; right: -5px; top: -5px; background-color: red; color: white;
-            border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold;
-            display: flex; justify-content: center; align-items: center; border: 2px solid #fff;
-        }
-
-        /* 頁面切換控制 */
-        .page { display: none; padding: 20px; max-width: 800px; margin: 0 auto; height: calc(100vh - 60px); box-sizing: border-box; }
-        .page.active { display: block; }
-        #unit-screen.page.active { display: flex; flex-direction: column; padding: 0; }
-
-        /* --- 首頁樣式 --- */
-        .card { height: 150px; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; alignItems: center; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; color: white; text-align: center; }
-        .math-card { background-color: #4A90E2; }
-        .science-card { background-color: #50E3C2; }
-        .card h1 { margin: 0; font-size: 32px; }
-        .card p { margin: 5px 0 0; font-size: 16px; opacity: 0.9; }
-
-        /* --- 單元列表樣式 --- */
-        .unit-card { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; }
-        .unit-icon { width: 50px; height: 50px; border-radius: 25px; display: flex; justify-content: center; align-items: center; font-size: 24px; margin-right: 15px; color: #fff; }
-
-        /* --- 單元詳細頁樣式 --- */
-        .tab-container { display: flex; border-bottom: 1px solid #eee; background: #fff; }
-        .tab { flex: 1; padding: 15px 0; text-align: center; cursor: pointer; color: #666; font-size: 16px; }
-        .tab.active { border-bottom: 3px solid #007AFF; color: #007AFF; font-weight: bold; }
-        
-        .content-area { flex: 1; background: #f9f9f9; overflow-y: auto; position: relative; }
-        
-        .download-bar { padding: 12px; text-align: center; border-bottom: 1px solid #ddd; background: #e3f2fd; color: #1565c0; font-weight: bold; cursor: pointer; }
-        .download-bar.answer { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
-        
-        /* 留言板樣式 */
-        .chat-container { padding: 15px; padding-bottom: 140px; /* 預留底部登入框空間 */ }
-        .comment-item { background: #fff; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .comment-user { font-size: 12px; color: #888; margin-bottom: 4px; }
-        .comment-text { font-size: 16px; color: #333; word-break: break-all; }
-        
-        /* 底部區域 (包含輸入框 或 登入框) */
-        .bottom-action-area {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: #fff; border-top: 1px solid #eee; padding: 15px;
-            z-index: 50; max-width: 800px; margin: 0 auto;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-        }
-
-        /* 留言輸入模式 */
-        .input-row { display: flex; gap: 10px; }
-        .chat-input { flex: 1; background: #f0f0f0; border: none; border-radius: 20px; padding: 10px 15px; font-size: 16px; outline: none; }
-        .send-btn { background: #007AFF; color: white; border: none; border-radius: 20px; padding: 0 20px; font-weight: bold; cursor: pointer; }
-
-        /* 登入模式 */
-        .auth-row { display: flex; flex-direction: column; gap: 10px; }
-        .auth-title { text-align: center; font-size: 14px; color: #666; margin-bottom: 5px; }
-        .auth-inputs { display: flex; gap: 10px; }
-        .auth-inputs input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        .auth-btns { display: flex; gap: 10px; }
-        .auth-btns button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-login { background: #007AFF; color: white; }
-        .btn-register { background: #E0E0E0; color: #333; }
-
-        /* PDF iframe */
-        .pdf-frame { width: 100%; height: 100%; border: none; }
-        .center-msg { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; color: #666; padding: 20px; }
-
-        /* Modal (通用與通知) */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: #fff; width: 90%; max-width: 400px; max-height: 80vh; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .modal-body { overflow-y: auto; flex: 1; }
-        
-        /* 通知列表項目 */
-        .notif-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-        .notif-item:active { background: #f9f9f9; }
-        .notif-title { font-weight: bold; color: #333; margin-bottom: 5px; }
-        .notif-body { font-size: 14px; color: #666; }
-        .notif-time { font-size: 12px; color: #999; margin-top: 5px; text-align: right; }
-        .new-badge { display: inline-block; background: red; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
-
-        .btn { padding: 10px; margin-top: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; text-align: center; }
-        .btn-blue { background: #2196F3; } .btn-red { background: #d9534f; }
-        .close-btn { background: transparent; border: none; font-size: 24px; color: #999; cursor: pointer; }
-    </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="icon-btn" onclick="openSettings()" id="settings-btn">
+        <div class="icon-btn" id="left-action-btn">
             <ion-icon name="person-circle-outline"></ion-icon>
+            <span id="login-label" style="font-size: 14px; margin-left: 5px; font-weight: bold; display:none;">登入/註冊</span>
         </div>
         
-        <div class="icon-btn" onclick="handleBack()" id="back-btn" style="display: none;">
+        <div class="icon-btn" id="back-btn" style="display: none;">
             <ion-icon name="arrow-back-outline"></ion-icon>
         </div>
         
         <div class="header-title" id="header-title">首頁</div>
         
-        <div class="icon-btn" style="position: relative;" onclick="openNotifications()">
+        <div class="icon-btn" style="position: relative;" id="notif-btn">
             <ion-icon name="notifications-outline" style="color: #007AFF;"></ion-icon>
             <div id="badge" class="badge" style="display: none;">0</div>
         </div>
     </div>
 
     <div id="home-screen" class="page active">
-        <div style="text-align: center; margin: 30px 0; font-size: 20px; font-weight: bold; color: #333;" id="greeting-text">嗨! 同學 選擇科目來練習吧</div>
-        <div class="card math-card" onclick="goToSubject('math')">
+        <div class="greeting" id="greeting-text">嗨! 同學 選擇科目來練習吧</div>
+        
+        <div class="card math-card" id="btn-math">
             <h1>📐 數學</h1><p>Mathematics</p>
         </div>
-        <div class="card science-card" onclick="goToSubject('science')">
+        <div class="card science-card" id="btn-science">
             <h1>🧪 理化</h1><p>Science</p>
         </div>
         
-        <div id="teacher-section" style="display: none; background: #fffbe6; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid #ffe58f;">
-            <p style="text-align: center; font-weight: bold; color: #666; margin-top: 0;">--- 老師發送通知區 ---</p>
+        <div id="teacher-section" style="display: none;" class="teacher-box">
+            <p class="teacher-title">--- 老師發送通知區 ---</p>
             <div style="margin: 10px 0; color: #555;">目標單元：</div>
-            <select id="admin-unit-select" style="width: 100%; padding: 10px; margin-bottom: 10px;">
+            <select id="admin-unit-select" class="full-select">
                 <option value="">載入中...</option>
             </select>
             <div style="display: flex; gap: 10px;">
-                <button class="btn" style="background: #FF9800; flex:1;" onclick="simulateTeacherUpload('question')">📢 通知題目更新</button>
-                <button class="btn" style="background: #4CAF50; flex:1;" onclick="simulateTeacherUpload('answer')">📢 通知詳解更新</button>
+                <button class="btn btn-orange" id="btn-upload-q">📢 通知題目更新</button>
+                <button class="btn btn-green" id="btn-upload-a">📢 通知詳解更新</button>
             </div>
         </div>
     </div>
@@ -166,445 +58,85 @@
 
     <div id="unit-screen" class="page">
         <div class="tab-container">
-            <div class="tab active" onclick="switchTab('question')" id="tab-question">題目卷</div>
-            <div class="tab" onclick="switchTab('answer')" id="tab-answer">詳解卷</div>
-            <div class="tab" onclick="switchTab('chat')" id="tab-chat">討論區</div>
+            <div class="tab active" data-tab="question">題目卷</div>
+            <div class="tab" data-tab="answer">詳解卷</div>
+            <div class="tab" data-tab="chat">討論區</div>
         </div>
 
         <div class="content-area" id="unit-content">
-            <div id="panel-question" style="height: 100%; display: flex; flex-direction: column;">
-                <div id="dl-question" class="download-bar" onclick="openPdf(currentUnitData?.questionPdf)">📥 下載/列印題目卷</div>
-                <div id="viewer-question" style="flex: 1;"></div>
+            <div id="panel-question" class="panel active-panel">
+                <div id="dl-question" class="download-bar">📥 下載/列印題目卷</div>
+                <div id="viewer-question" class="viewer-box"></div>
             </div>
 
-            <div id="panel-answer" style="height: 100%; display: none; flex-direction: column;">
-                <div id="dl-answer" class="download-bar answer" onclick="openPdf(currentUnitData?.answerPdf)">📥 下載/列印詳解卷</div>
-                <div id="viewer-answer" style="flex: 1;"></div>
+            <div id="panel-answer" class="panel">
+                <div id="dl-answer" class="download-bar answer">📥 下載/列印詳解卷</div>
+                <div id="viewer-answer" class="viewer-box"></div>
             </div>
 
-            <div id="panel-chat" style="display: none; height: 100%;">
+            <div id="panel-chat" class="panel">
                 <div class="chat-container" id="chat-list">
-                    <div style="text-align: center; color: #999; margin-top: 20px;">載入留言中...</div>
+                    <div class="loading-text">載入留言中...</div>
                 </div>
 
                 <div class="bottom-action-area">
-                    
                     <div id="chat-input-area" class="input-row" style="display: none;">
-                        <input type="text" id="comment-input" class="chat-input" placeholder="輸入問題..." onkeypress="handleEnter(event)">
-                        <button class="send-btn" onclick="sendComment()">送出</button>
+                        <input type="text" id="comment-input" class="chat-input" placeholder="輸入問題...">
+                        <button class="send-btn" id="btn-send-comment">送出</button>
                     </div>
-
-                    <div id="chat-auth-ui" class="auth-row">
-                        <div class="auth-title">請登入以參與討論 (新同學請按註冊)</div>
-                        <div class="auth-inputs">
-                            <input type="email" id="chat-email" placeholder="Email">
-                            <input type="password" id="chat-pwd" placeholder="密碼 (6位以上)">
-                        </div>
-                        <div class="auth-btns">
-                            <button class="btn-login" onclick="loginFromChat()">登入</button>
-                            <button class="btn-register" onclick="registerFromChat()">註冊</button>
-                        </div>
+                    <div id="chat-auth-hint" class="auth-hint-box" style="display: flex;">
+                        <span>請點擊左上角「登入」以參與討論</span>
+                        <button class="btn-sm-login" id="btn-quick-login">登入 / 註冊</button>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="notification-modal" class="modal-overlay" onclick="if(event.target === this) closeNotifications()">
+    <div id="notification-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 style="margin:0;">🔔 通知中心</h3>
-                <button class="close-btn" onclick="closeNotifications()">×</button>
+                <button class="close-btn" id="close-notif">×</button>
             </div>
             <div class="modal-body" id="notif-list">
-                <p style="text-align: center; color: #999;">載入中...</p>
+                <p class="loading-text">載入中...</p>
             </div>
-            <button class="btn" style="background: #eee; color: #666; margin-top:15px;" onclick="closeNotifications()">關閉並清除紅點</button>
+            <button class="btn" style="background: #eee; color: #666; margin-top:15px;" id="btn-close-read">關閉並清除紅點</button>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div id="settings-modal" class="modal-overlay">
         <div class="modal-content" style="text-align: center;">
-            <h2 id="settings-title">帳號設定</h2>
+            <h2>帳號設定</h2>
             <p id="settings-user-info"></p>
-            <button class="btn btn-red" onclick="logout()">登出</button>
-            <button class="btn" style="background: #ccc; color: #333;" onclick="document.getElementById('settings-modal').style.display='none'">取消</button>
+            <button class="btn btn-red" id="btn-logout">登出</button>
+            <button class="btn btn-gray" id="btn-cancel-settings">取消</button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, getDoc, doc, where, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <div id="auth-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="margin:0;">🔐 登入或註冊</h3>
+                <button class="close-btn" id="close-auth">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-row">
+                    <input type="email" id="auth-email" placeholder="Email" class="full-input">
+                    <input type="password" id="auth-pwd" placeholder="密碼 (6位以上)" class="full-input">
+                    <div class="auth-btns">
+                        <button class="btn-login" id="btn-do-login">登入</button>
+                        <button class="btn-register" id="btn-do-register">註冊</button>
+                    </div>
+                    <p style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
+                        若無帳號，輸入 Email 與密碼後直接按「註冊」即可。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // ▼▼▼ 請填入你的 Firebase Config ▼▼▼
-        const firebaseConfig = {
-  apiKey: "AIzaSyA4rX2ZjJqto9Eyv4G_xdlAdYAH3uJCMBo",
-  authDomain: "reviewtest-f016d.firebaseapp.com",
-  projectId: "reviewtest-f016d",
-  storageBucket: "reviewtest-f016d.firebasestorage.app",
-  messagingSenderId: "170552561842",
-  appId: "1:170552561842:web:a204553261698d7311b9ab",
-  measurementId: "G-RQ20L5H9S4"
-};
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const ADMIN_EMAIL = "ulysses950710@gmail.com";
-
-        window.currentUser = null;
-        window.currentUnitData = null;
-        window.currentUnitId = null;
-        let unsubscribeChat = null;
-
-        // --- 1. 身份驗證監聽 (控制聊天室底部 UI) ---
-        onAuthStateChanged(auth, (user) => {
-            window.currentUser = user;
-            
-            // 更新聊天室底部介面
-            const inputArea = document.getElementById('chat-input-area');
-            const authUI = document.getElementById('chat-auth-ui');
-            
-            if (user) {
-                // 已登入
-                inputArea.style.display = 'flex';
-                authUI.style.display = 'none';
-                
-                // 更新設定視窗資訊
-                document.getElementById('settings-user-info').innerText = `目前登入：${user.email}`;
-                
-                // 首頁歡迎詞
-                document.getElementById('greeting-text').innerText = `嗨! ${user.displayName || user.email.split('@')[0]} 同學`;
-
-                // 老師介面
-                if (user.email === ADMIN_EMAIL) {
-                    document.getElementById('teacher-section').style.display = 'block';
-                    fetchUnitsForAdmin();
-                } else {
-                    document.getElementById('teacher-section').style.display = 'none';
-                }
-            } else {
-                // 未登入
-                inputArea.style.display = 'none';
-                authUI.style.display = 'flex'; // 顯示內嵌登入框
-                document.getElementById('greeting-text').innerText = "嗨! 同學 選擇科目來練習吧";
-            }
-            
-            listenNotifications();
-        });
-
-        // 聊天室內的登入
-        window.loginFromChat = async () => {
-            const email = document.getElementById('chat-email').value;
-            const pwd = document.getElementById('chat-pwd').value;
-            if(!email || !pwd) return alert("請輸入 Email 和密碼");
-            try { 
-                await signInWithEmailAndPassword(auth, email, pwd); 
-                // 登入成功後 onAuthStateChanged 會自動切換 UI
-            } catch(e) { alert("登入失敗: " + e.message); }
-        };
-
-        // 聊天室內的註冊 (新增功能)
-        window.registerFromChat = async () => {
-            const email = document.getElementById('chat-email').value;
-            const pwd = document.getElementById('chat-pwd').value;
-            if(!email || !pwd) return alert("請輸入 Email 和密碼");
-            try {
-                await createUserWithEmailAndPassword(auth, email, pwd);
-                alert("註冊成功！");
-            } catch(e) { alert("註冊失敗: " + e.message); }
-        };
-
-        window.logout = async () => { 
-            await signOut(auth); 
-            document.getElementById('settings-modal').style.display='none'; 
-        };
-
-        window.openSettings = () => {
-            if(!window.currentUser) {
-                alert("請直接在單元討論區下方登入即可");
-                // 為了方便，如果沒登入點人頭，可以直接導向某個單元或提示
-            } else {
-                document.getElementById('settings-modal').style.display = 'flex';
-            }
-        };
-
-        // --- 2. 通知中心邏輯 (新功能) ---
-        window.openNotifications = async () => {
-            document.getElementById('notification-modal').style.display = 'flex';
-            const listEl = document.getElementById('notif-list');
-            listEl.innerHTML = '<p style="text-align: center; color: #999;">載入中...</p>';
-
-            try {
-                // 撈取最近 20 筆通知
-                const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(20));
-                const snap = await getDocs(q);
-                
-                if(snap.empty) {
-                    listEl.innerHTML = '<p style="text-align: center; margin-top: 20px;">目前沒有新通知</p>';
-                    return;
-                }
-
-                let html = '';
-                const lastRead = parseInt(localStorage.getItem('lastReadTime') || '0');
-
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    // 濾掉自己發的
-                    if(window.currentUser && data.senderEmail === window.currentUser.email) return;
-
-                    const isNew = (data.createdAt?.toMillis() || 0) > lastRead;
-                    const date = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleString() : '';
-                    
-                    // 點擊通知跳轉邏輯
-                    const onClickAttr = `onclick="handleNotificationClick('${data.unitId}', '${data.targetTab}')"`;
-
-                    html += `
-                        <div class="notif-item" ${onClickAttr}>
-                            <div class="notif-title">
-                                ${isNew ? '<span class="new-badge"></span>' : ''}
-                                ${data.title}
-                            </div>
-                            <div class="notif-body">${data.body}</div>
-                            <div class="notif-time">${date}</div>
-                        </div>
-                    `;
-                });
-                listEl.innerHTML = html || '<p style="text-align: center;">沒有其他人的通知</p>';
-            } catch(e) {
-                console.error(e);
-                listEl.innerHTML = '載入失敗';
-            }
-        };
-
-        window.closeNotifications = () => {
-            document.getElementById('notification-modal').style.display = 'none';
-            // 關閉時才清除紅點 (更新讀取時間)
-            localStorage.setItem('lastReadTime', Date.now().toString());
-            document.getElementById('badge').style.display = 'none';
-        };
-
-        // 點擊通知後的跳轉
-        window.handleNotificationClick = (unitId, tab) => {
-            closeNotifications(); // 先關視窗
-            if(unitId) {
-                // 先跳轉到單元
-                goToUnit(unitId).then(() => {
-                    // 再切換到對應的 Tab (question/answer/chat)
-                    if(tab) switchTab(tab);
-                });
-            }
-        };
-
-        // --- 3. 路由與頁面邏輯 (維持不變) ---
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            
-            if(pageId === 'home-screen') {
-                document.getElementById('back-btn').style.display = 'none';
-                document.getElementById('settings-btn').style.display = 'flex';
-                document.getElementById('header-title').innerText = '首頁';
-            } else {
-                document.getElementById('back-btn').style.display = 'flex';
-                document.getElementById('settings-btn').style.display = 'none';
-            }
-        }
-
-        window.handleBack = () => {
-            if(document.getElementById('unit-screen').classList.contains('active')) {
-                if(unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
-                showPage('subject-screen');
-                document.getElementById('header-title').innerText = '單元列表';
-            } else {
-                showPage('home-screen');
-            }
-        };
-
-        window.goToSubject = async (subjectId) => {
-            showPage('subject-screen');
-            const container = document.getElementById('unit-list-container');
-            container.innerHTML = '<p style="text-align:center;">載入中...</p>';
-            document.getElementById('header-title').innerText = (subjectId === 'math' ? '數學' : '理化') + '單元列表';
-
-            const themeColor = subjectId === 'math' ? '#4A90E2' : '#50E3C2';
-            const q = query(collection(db, 'units'), where('subject', '==', subjectId), orderBy('order', 'asc'));
-            
-            try {
-                const snap = await getDocs(q);
-                if(snap.empty) { container.innerHTML = '<p style="text-align:center;">無單元</p>'; return; }
-                let html = '';
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    html += `
-                        <div class="unit-card" onclick="goToUnit('${doc.id}')">
-                            <div class="unit-icon" style="background-color: ${themeColor};">${subjectId === 'math'?'📐':'🧪'}</div>
-                            <div><h3>${data.title}</h3><p>點擊查看題目與詳解</p></div>
-                        </div>`;
-                });
-                container.innerHTML = html;
-            } catch(e) { console.error(e); container.innerHTML = '讀取錯誤'; }
-        };
-
-        window.goToUnit = async (unitId) => {
-            window.currentUnitId = unitId;
-            showPage('unit-screen');
-            document.getElementById('header-title').innerText = '載入中...';
-            switchTab('question');
-
-            try {
-                const docSnap = await getDoc(doc(db, 'units', unitId));
-                if(docSnap.exists()) {
-                    window.currentUnitData = docSnap.data();
-                    document.getElementById('header-title').innerText = window.currentUnitData.title;
-                    renderPdfViewer('question', window.currentUnitData.questionPdf);
-                    renderPdfViewer('answer', window.currentUnitData.answerPdf);
-                } else { alert('找不到單元'); handleBack(); }
-            } catch(e) { console.error(e); alert('讀取失敗'); }
-            loadComments(unitId);
-        };
-
-        window.switchTab = (tabName) => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            ['question', 'answer', 'chat'].forEach(t => {
-                document.getElementById(`panel-${t}`).style.display = (t === tabName) ? (t === 'chat' ? 'block' : 'flex') : 'none';
-            });
-        };
-
-        function renderPdfViewer(type, url) {
-            const viewer = document.getElementById(`viewer-${type}`);
-            const dlBtn = document.getElementById(`dl-${type}`);
-            if(!url) {
-                viewer.innerHTML = `<div class="center-msg">尚未上傳檔案</div>`;
-                dlBtn.style.display = 'none';
-                return;
-            }
-            dlBtn.style.display = 'block';
-            const isMobile = window.innerWidth < 768;
-            if (isMobile) {
-                viewer.innerHTML = `
-                    <div class="center-msg">
-                        <p>手機版建議直接開啟 PDF 閱讀</p>
-                        <button class="btn btn-blue" style="width:auto;" onclick="openPdf('${url}')">📄 點此開啟 PDF</button>
-                    </div>`;
-            } else {
-                viewer.innerHTML = `<iframe src="${url}" class="pdf-frame"></iframe>`;
-            }
-        }
-        
-        window.openPdf = (url) => { if(url) window.open(url, '_blank'); };
-
-        function loadComments(unitId) {
-            if(unsubscribeChat) unsubscribeChat();
-            const q = query(collection(db, 'units', unitId, 'comments'), orderBy('createdAt', 'desc'));
-            const listEl = document.getElementById('chat-list');
-            
-            unsubscribeChat = onSnapshot(q, (snap) => {
-                if(snap.empty) {
-                    listEl.innerHTML = '<div style="text-align:center;color:#999;margin-top:20px;">還沒有留言，來搶頭香吧！</div>';
-                    return;
-                }
-                let html = '';
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    const name = data.userName || data.userEmail.split('@')[0];
-                    html += `
-                        <div class="comment-item">
-                            <div class="comment-user">${name}:</div>
-                            <div class="comment-text">${data.text}</div>
-                        </div>`;
-                });
-                listEl.innerHTML = html;
-            });
-        }
-
-        window.handleEnter = (e) => { if(e.key === 'Enter') sendComment(); };
-
-        window.sendComment = async () => {
-            const input = document.getElementById('comment-input');
-            const text = input.value.trim();
-            if(!text) return;
-            // 雙重檢查：如果 UI 顯示錯誤讓未登入者按到按鈕
-            if(!window.currentUser) return alert('請先登入');
-
-            const user = window.currentUser;
-            const name = user.displayName || user.email.split('@')[0];
-            
-            try {
-                await addDoc(collection(db, 'units', window.currentUnitId, 'comments'), {
-                    text: text,
-                    userEmail: user.email,
-                    userName: name,
-                    createdAt: serverTimestamp()
-                });
-                await addDoc(collection(db, 'notifications'), {
-                    type: 'comment',
-                    title: `💬 ${window.currentUnitData.title} 有新留言`,
-                    body: `${name}: ${text}`,
-                    unitId: window.currentUnitId,
-                    targetTab: 'chat',
-                    createdAt: serverTimestamp(),
-                    senderEmail: user.email
-                });
-                input.value = '';
-                document.getElementById('unit-content').scrollTop = 0;
-            } catch(e) { console.error(e); alert('留言失敗'); }
-        };
-
-        // --- 老師與紅點 ---
-        async function fetchUnitsForAdmin() {
-            const q = query(collection(db, 'units'), orderBy('order', 'asc'));
-            const snap = await getDocs(q);
-            const select = document.getElementById('admin-unit-select');
-            select.innerHTML = '';
-            snap.forEach(doc => {
-                const opt = document.createElement('option');
-                opt.value = doc.id;
-                opt.text = doc.data().title;
-                opt.dataset.title = doc.data().title;
-                select.appendChild(opt);
-            });
-        }
-
-        window.simulateTeacherUpload = async (type) => {
-            const select = document.getElementById('admin-unit-select');
-            const unitId = select.value;
-            if(!unitId) return alert('請選擇單元');
-            const title = select.options[select.selectedIndex].dataset.title;
-            const isQ = type === 'question';
-            try {
-                await addDoc(collection(db, 'notifications'), {
-                    type: 'file',
-                    title: isQ ? '📄 題目卷' : '✅ 詳解卷',
-                    body: `單元「${title}」已經更新${isQ?'題目':'詳解'}囉！`,
-                    unitId: unitId,
-                    senderEmail: window.currentUser.email,
-                    targetTab: type,
-                    createdAt: serverTimestamp()
-                });
-                alert('已發送通知！');
-            } catch(e) { alert(e.message); }
-        };
-
-        function listenNotifications() {
-            const lastRead = parseInt(localStorage.getItem('lastReadTime') || '0');
-            const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(50));
-            onSnapshot(q, (snap) => {
-                const count = snap.docs.filter(doc => {
-                    const d = doc.data();
-                    const isNew = (d.createdAt?.toMillis() || 0) > lastRead;
-                    const notMe = window.currentUser ? d.senderEmail !== window.currentUser.email : true;
-                    return isNew && notMe;
-                }).length;
-                const badge = document.getElementById('badge');
-                if(count > 0) { badge.style.display = 'flex'; badge.innerText = count>9?'9+':count; }
-                else badge.style.display = 'none';
-            });
-        }
-    </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
