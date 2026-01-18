@@ -703,27 +703,27 @@ async function quickNotify(tab) {
 // ==========================
 
 const chatInput = document.getElementById('comment-input');
-const chatList = document.getElementById('chat-list');
+const chatList = document.getElementById('chat-list'); // 這裡定義了 chatList
 
 // 定義一個強制的「捲到底部」函式
 function forceScrollToBottom() {
-    // 稍微延遲，等待鍵盤動畫完成
     setTimeout(() => {
-        const lastMsg = chatList.lastElementChild;
+        // ▼▼▼ 修改這裡：把 listEl 改成 chatList ▼▼▼
+        const lastMsg = chatList.lastElementChild; 
         if (lastMsg) {
             // 使用 scrollIntoView 讓最後一則訊息出現在畫面可視區
             lastMsg.scrollIntoView({ behavior: "smooth", block: "end" });
         }
     }, 100); 
     
-    // 保險起見，300ms 後再捲一次 (針對比較慢的舊手機)
+    // 保險起見，300ms 後再捲一次
     setTimeout(() => {
-    const lastMessage = listEl.lastElementChild;
-    if (lastMessage) {
-        // block: "end" 代表讓這個元素的底部，對齊畫面的底部
-        lastMessage.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-}, 300);
+        // ▼▼▼ 修改這裡：把 listEl 改成 chatList ▼▼▼
+        const lastMsg = chatList.lastElementChild;
+        if (lastMsg) {
+            lastMsg.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+    }, 300);
 }
 
 // 1. 當點擊輸入框 (鍵盤彈出) 時，強制捲動
@@ -731,9 +731,8 @@ if (chatInput) {
     chatInput.addEventListener('focus', forceScrollToBottom);
 }
 
-// 2. 當視窗大小改變 (通常是 Android 鍵盤彈出/收起) 時，強制捲動
+// 2. 當視窗大小改變 (Android 鍵盤彈出) 時，強制捲動
 window.addEventListener('resize', () => {
-    // 只有當我們在「單元畫面」且切換到「聊天分頁」時才執行
     const isChatActive = document.getElementById('panel-chat').classList.contains('active-panel');
     if (isChatActive) {
         forceScrollToBottom();
