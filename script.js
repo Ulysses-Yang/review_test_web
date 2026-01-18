@@ -235,7 +235,7 @@ function updateUI(user) {
         inputArea.style.display = 'none';
         authHint.style.display = 'flex';
         loginLabel.style.display = 'inline';
-        document.getElementById('greeting-text').innerText = "嗨! 同學 選擇科目來練習吧";
+        document.getElementById('greeting-text').innerText = "哈囉！";
         
         settingsBtn.onclick = openAuthModal;
     }
