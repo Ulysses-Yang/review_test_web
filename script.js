@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, getDoc, doc, where, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ▼▼▼ Firebase Config (使用你提供的) ▼▼▼
@@ -39,7 +39,6 @@ window.addEventListener('load', () => {
 window.onpopstate = (event) => {
     if (event.state && event.state.page) {
         renderPage(event.state.page);
-        // 如果是返回單元頁，可能需要重新載入某些資料 (這裡簡化處理)
     } else {
         renderPage('home-screen');
     }
@@ -47,12 +46,11 @@ window.onpopstate = (event) => {
 
 // 核心跳轉函數
 function navigateTo(pageId, data = {}) {
-    // 推送新的歷史紀錄
     history.pushState({ page: pageId, ...data }, '', `?page=${pageId.replace('-screen','')}`);
     renderPage(pageId);
 }
 
-// 渲染頁面 UI (不影響歷史紀錄)
+// 渲染頁面 UI
 function renderPage(pageId) {
     document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
     const target = document.getElementById(pageId);
@@ -65,29 +63,23 @@ function renderPage(pageId) {
 
     if (pageId === 'home-screen') {
         backBtn.style.display = 'none';
-        leftActionBtn.style.display = 'flex'; // 首頁顯示左上角
+        leftActionBtn.style.display = 'flex';
         title.innerText = '首頁';
     } else {
         backBtn.style.display = 'flex';
-        leftActionBtn.style.display = 'none'; // 內頁隱藏左上角，保留返回鍵
-        
-        // 如果是科目列表
-        if(pageId === 'subject-screen') {
-           title.innerText = '單元列表'; 
-        }
+        leftActionBtn.style.display = 'none';
+        if(pageId === 'subject-screen') title.innerText = '單元列表'; 
     }
 }
 
-// 綁定返回按鈕
 document.getElementById('back-btn').onclick = () => {
-    history.back(); // 這會觸發 onpopstate
+    history.back();
 };
 
 // ==========================
 // 2. 頁面邏輯
 // ==========================
 
-// 首頁點擊
 document.getElementById('btn-math').onclick = () => goToSubject('math');
 document.getElementById('btn-science').onclick = () => goToSubject('science');
 
@@ -106,8 +98,6 @@ async function goToSubject(subjectId) {
         let html = '';
         snap.forEach(doc => {
             const data = doc.data();
-            // 注意這裡改用 JS event delegation 或者直接寫 onclick
-            // 為了方便，我們動態生成 HTML 時加入 onclick 呼叫全域函數 (需掛載到 window)
             html += `
                 <div class="unit-card" onclick="window.triggerUnit('${doc.id}')">
                     <div class="unit-icon" style="background-color: ${themeColor};">${subjectId === 'math' ? '📐' : '🧪'}</div>
@@ -118,7 +108,6 @@ async function goToSubject(subjectId) {
     } catch (e) { console.error(e); container.innerHTML = '讀取錯誤'; }
 }
 
-// 需要掛載到 window 才能被 HTML 字串中的 onclick 呼叫
 window.triggerUnit = (unitId) => {
     goToUnit(unitId);
 };
@@ -128,7 +117,6 @@ async function goToUnit(unitId) {
     navigateTo('unit-screen');
     document.getElementById('header-title').innerText = '載入中...';
     
-    // 重置 Tab
     switchTab('question');
 
     try {
@@ -145,10 +133,9 @@ async function goToUnit(unitId) {
 }
 
 // ==========================
-// 3. 單元詳細頁 (Tab, PDF, Chat)
+// 3. 單元詳細頁
 // ==========================
 
-// Tab 切換
 document.querySelectorAll('.tab').forEach(t => {
     t.onclick = () => switchTab(t.dataset.tab);
 });
@@ -166,7 +153,6 @@ function renderPdfViewer(type, url) {
     const viewer = document.getElementById(`viewer-${type}`);
     const dlBtn = document.getElementById(`dl-${type}`);
     
-    // 下載按鈕點擊事件
     dlBtn.onclick = () => { if(url) window.open(url, '_blank'); };
 
     if (!url) {
@@ -235,7 +221,7 @@ async function sendComment() {
             userName: name,
             createdAt: serverTimestamp()
         });
-        // 寫入通知
+        
         await addDoc(collection(db, 'notifications'), {
             type: 'comment',
             title: `💬 ${window.currentUnitData.title} 有新留言`,
@@ -250,14 +236,14 @@ async function sendComment() {
 }
 
 // ==========================
-// 4. 身份驗證 (Auth)
+// 4. 身份驗證 (Auth) - 已更新
 // ==========================
 
 // 監聽狀態
 onAuthStateChanged(auth, (user) => {
     window.currentUser = user;
     updateUI(user);
-    listenNotifications();
+    if(user) listenNotifications();
 });
 
 function updateUI(user) {
@@ -270,13 +256,12 @@ function updateUI(user) {
         // 已登入
         inputArea.style.display = 'flex';
         authHint.style.display = 'none';
+        loginLabel.style.display = 'none';
         
-        loginLabel.style.display = 'none'; // 隱藏文字，顯示 icon
-        
-        document.getElementById('settings-user-info').innerText = `目前登入：${user.email}`;
-        document.getElementById('greeting-text').innerText = `嗨! ${user.displayName || user.email.split('@')[0]} 同學`;
+        const displayName = user.displayName || user.email.split('@')[0];
+        document.getElementById('settings-user-info').innerText = `目前登入：${displayName} (${user.email})`;
+        document.getElementById('greeting-text').innerText = `嗨! ${displayName} 同學`;
 
-        // 老師專區
         if (user.email === ADMIN_EMAIL) {
             document.getElementById('teacher-section').style.display = 'block';
             fetchUnitsForAdmin();
@@ -284,7 +269,6 @@ function updateUI(user) {
             document.getElementById('teacher-section').style.display = 'none';
         }
         
-        // 設定左上角按鈕行為 -> 開啟設定
         settingsBtn.onclick = () => {
             document.getElementById('settings-modal').style.display = 'flex';
         };
@@ -293,39 +277,98 @@ function updateUI(user) {
         // 未登入
         inputArea.style.display = 'none';
         authHint.style.display = 'flex';
-        
-        loginLabel.style.display = 'inline'; // 顯示「登入/註冊」文字
+        loginLabel.style.display = 'inline';
         document.getElementById('greeting-text').innerText = "嗨! 同學 選擇科目來練習吧";
         
-        // 設定左上角按鈕行為 -> 開啟登入框
         settingsBtn.onclick = openAuthModal;
     }
 }
 
-// Auth Modal 控制
+// Auth Modal 控制邏輯
 const authModal = document.getElementById('auth-modal');
-function openAuthModal() { authModal.style.display = 'flex'; }
-document.getElementById('close-auth').onclick = () => authModal.style.display = 'none';
-document.getElementById('btn-quick-login').onclick = openAuthModal; // 討論區下方的按鈕
+const loginView = document.getElementById('login-view');
+const registerView = document.getElementById('register-view');
+const authTitle = document.getElementById('auth-title');
 
-// 登入與註冊動作
+function openAuthModal() { 
+    authModal.style.display = 'flex';
+    showLoginView(); // 每次打開預設顯示登入
+}
+
+// 切換為註冊
+document.getElementById('go-to-register').onclick = () => {
+    loginView.classList.add('hidden');
+    registerView.classList.remove('hidden');
+    authTitle.innerText = "建立新帳戶";
+};
+
+// 切換為登入
+document.getElementById('go-to-login').onclick = showLoginView;
+
+function showLoginView() {
+    registerView.classList.add('hidden');
+    loginView.classList.remove('hidden');
+    authTitle.innerText = "歡迎回來";
+}
+
+document.getElementById('close-auth').onclick = () => authModal.style.display = 'none';
+document.getElementById('btn-quick-login').onclick = openAuthModal; 
+
+// --- 執行登入 ---
 document.getElementById('btn-do-login').onclick = async () => {
-    const email = document.getElementById('auth-email').value;
-    const pwd = document.getElementById('auth-pwd').value;
+    const email = document.getElementById('login-email').value;
+    const pwd = document.getElementById('login-password').value;
+    const btn = document.getElementById('btn-do-login');
+
+    if(!email || !pwd) return alert("請輸入帳號密碼");
+
+    btn.innerText = "登入中...";
     try {
         await signInWithEmailAndPassword(auth, email, pwd);
         authModal.style.display = 'none';
-    } catch(e) { alert("登入失敗: " + e.message); }
+    } catch(e) { 
+        alert("登入失敗: " + e.message); 
+    } finally {
+        btn.innerText = "登入";
+    }
 };
 
+// --- 執行註冊 ---
 document.getElementById('btn-do-register').onclick = async () => {
-    const email = document.getElementById('auth-email').value;
-    const pwd = document.getElementById('auth-pwd').value;
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const pwd = document.getElementById('reg-password').value;
+    const confirmPwd = document.getElementById('reg-confirm-password').value;
+    const btn = document.getElementById('btn-do-register');
+
+    if (!name || !email || !pwd) return alert("請填寫所有欄位");
+    if (pwd !== confirmPwd) return alert("兩次密碼輸入不一致");
+    if (pwd.length < 6) return alert("密碼長度需至少 6 碼");
+
+    btn.innerText = "註冊中...";
+    btn.disabled = true;
+
     try {
-        await createUserWithEmailAndPassword(auth, email, pwd);
-        alert("註冊成功！已自動登入");
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pwd);
+        const user = userCredential.user;
+        
+        // 更新使用者名稱 (displayName)
+        await updateProfile(user, { displayName: name });
+        
+        alert(`註冊成功！歡迎 ${name}`);
         authModal.style.display = 'none';
-    } catch(e) { alert("註冊失敗: " + e.message); }
+        
+        // 強制更新一次 UI 顯示名字
+        updateUI(user);
+
+    } catch(e) { 
+        let msg = e.message;
+        if(msg.includes('email-already-in-use')) msg = "此 Email 已被註冊";
+        alert("註冊失敗: " + msg); 
+    } finally {
+        btn.innerText = "註冊";
+        btn.disabled = false;
+    }
 };
 
 // 登出
@@ -338,10 +381,9 @@ document.getElementById('btn-cancel-settings').onclick = () => {
 };
 
 // ==========================
-// 5. 通知系統
+// 5. 通知系統 (維持不變)
 // ==========================
 
-// 開啟通知列表
 document.getElementById('notif-btn').onclick = async () => {
     document.getElementById('notification-modal').style.display = 'flex';
     const listEl = document.getElementById('notif-list');
@@ -365,7 +407,6 @@ document.getElementById('notif-btn').onclick = async () => {
             const isNew = (data.createdAt?.toMillis() || 0) > lastRead;
             const date = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleString() : '';
             
-            // 注意：這裡也用 window.handleNotificationClick 處理點擊
             html += `
                 <div class="notif-item" onclick="window.handleNotificationClick('${data.unitId}', '${data.targetTab}')">
                     <div class="notif-title">
@@ -392,7 +433,6 @@ function closeNotifications() {
     document.getElementById('badge').style.display = 'none';
 }
 
-// 監聽紅點
 function listenNotifications() {
     const lastRead = parseInt(localStorage.getItem('lastReadTime') || '0');
     const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(50));
@@ -413,7 +453,6 @@ function listenNotifications() {
     });
 }
 
-// 點擊通知跳轉 (掛載到 window)
 window.handleNotificationClick = (unitId, tab) => {
     closeNotifications();
     if (unitId) {
@@ -424,7 +463,7 @@ window.handleNotificationClick = (unitId, tab) => {
 };
 
 // ==========================
-// 6. 老師後台功能
+// 6. 老師後台功能 (維持不變)
 // ==========================
 async function fetchUnitsForAdmin() {
     const q = query(collection(db, 'units'), orderBy('order', 'asc'));
@@ -440,7 +479,6 @@ async function fetchUnitsForAdmin() {
     });
 }
 
-// 老師上傳按鈕事件
 document.getElementById('btn-upload-q').onclick = () => simulateTeacherUpload('question');
 document.getElementById('btn-upload-a').onclick = () => simulateTeacherUpload('answer');
 

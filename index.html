@@ -118,21 +118,38 @@
     <div id="auth-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 style="margin:0;">🔐 登入或註冊</h3>
+                <h3 style="margin:0;" id="auth-title">歡迎回來</h3>
                 <button class="close-btn" id="close-auth">×</button>
             </div>
             <div class="modal-body">
-                <div class="auth-row">
-                    <input type="email" id="auth-email" placeholder="Email" class="full-input">
-                    <input type="password" id="auth-pwd" placeholder="密碼 (6位以上)" class="full-input">
-                    <div class="auth-btns">
-                        <button class="btn-login" id="btn-do-login">登入</button>
-                        <button class="btn-register" id="btn-do-register">註冊</button>
+                
+                <div id="login-view">
+                    <div class="auth-row">
+                        <input type="email" id="login-email" placeholder="Email" class="full-input">
+                        <input type="password" id="login-password" placeholder="密碼" class="full-input">
+                        <button class="btn-login full-btn" id="btn-do-login">登入</button>
+                        
+                        <div class="switch-link" id="go-to-register">
+                            還沒有帳號嗎？ <strong>點此註冊</strong>
+                        </div>
                     </div>
-                    <p style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
-                        若無帳號，輸入 Email 與密碼後直接按「註冊」即可。
-                    </p>
                 </div>
+
+                <div id="register-view" class="hidden">
+                    <div class="auth-row">
+                        <input type="text" id="reg-name" placeholder="姓名 / 暱稱" class="full-input">
+                        <input type="email" id="reg-email" placeholder="Email" class="full-input">
+                        <input type="password" id="reg-password" placeholder="設定密碼 (至少6碼)" class="full-input">
+                        <input type="password" id="reg-confirm-password" placeholder="確認密碼" class="full-input">
+                        
+                        <button class="btn-register full-btn" id="btn-do-register">註冊</button>
+
+                        <div class="switch-link" id="go-to-login">
+                            已經有帳號了？ <strong>返回登入</strong>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
