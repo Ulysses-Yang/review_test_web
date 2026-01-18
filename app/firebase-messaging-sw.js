@@ -24,7 +24,10 @@ messaging.onBackgroundMessage(function(payload) {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/review_test_web/app/assets/images/icon.png' // 設定通知圖示
+    // 修正這裡：確保這個路徑是相對於網域根目錄的
+    // 如果你的網址是 example.com/review_test_web/app/
+    // 而 icon 放在 public/icon.png，打包後它通常會在根目錄或對應路徑
+    icon: '/review_test_web/app/icon.png' 
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
