@@ -346,3 +346,53 @@ body {
     line-height: 1.6;
     border-top: 1px dashed #eee;
 }
+/* --- 設定頁面專用樣式 (按鈕加大版) --- */
+/* 設定視窗內的按鈕容器 */
+#settings-modal .modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* 讓按鈕之間有固定間距 */
+    padding: 30px 20px;
+}
+
+/* 讓設定視窗內的所有按鈕變大 */
+#settings-modal .btn, 
+#settings-modal button {
+    width: 100%;
+    height: 55px;      /* 增加高度，適合手指點擊 */
+    font-size: 18px;   /* 字體放大 */
+    font-weight: bold;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 登出鍵顏色 */
+#btn-logout {
+    background-color: #ff5252;
+    color: white;
+}
+
+/* 取消鍵顏色：做成淺灰色做出區隔 */
+#btn-cancel-settings {
+    background-color: #eeeeee;
+    color: #444444;
+}
+/* 確保左側動作按鈕好點擊 */
+#left-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;  /* 增加寬度 */
+    height: 44px; /* 增加高度 */
+    font-size: 32px; /* 調整 Ionicon 大小 */
+    color: #007AFF;
+    transition: opacity 0.2s;
+}
+
+#left-action-btn:active {
+    opacity: 0.6; /* 點擊時的視覺反饋 */
+}

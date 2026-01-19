@@ -329,10 +329,39 @@ document.getElementById('btn-do-register').onclick = async () => {
 };
 
 // 登出
-document.getElementById('btn-logout').onclick = async () => {
-    await signOut(auth);
-    document.getElementById('settings-modal').style.display = 'none';
+// --- 修改後的登出邏輯 ---
+// --- 1. 左上角頭像點擊邏輯 ---
+document.getElementById('left-action-btn').onclick = () => {
+    if (auth.currentUser) {
+        // 已登入：顯示設定視窗 (裡面有你的登出鍵)
+        const userInfo = document.getElementById('settings-user-info');
+        if (userInfo) {
+            userInfo.innerText = `目前帳號：${auth.currentUser.email}`;
+        }
+        document.getElementById('settings-modal').style.display = 'flex';
+    } else {
+        // 未登入：跳出登入/註冊視窗
+        document.getElementById('auth-modal').style.display = 'flex';
+    }
 };
+
+// --- 2. 你的登出邏輯 (保持不變，確認 ID 正確即可) ---
+document.getElementById('btn-logout').onclick = async () => {
+    const isConfirmed = confirm("⚠️ 確定要登出帳號嗎？\n\n登出後，下次使用需要重新輸入帳號密碼。");
+    if (!isConfirmed) return;
+
+    try {
+        await signOut(auth);
+        alert("已成功登出 👋");
+        document.getElementById('settings-modal').style.display = 'none';
+        window.location.reload(); 
+    } catch (error) {
+        console.error("登出錯誤:", error);
+        alert("登出失敗，請重試");
+    }
+};
+
+// --- 3. 取消按鈕邏輯 ---
 document.getElementById('btn-cancel-settings').onclick = () => {
     document.getElementById('settings-modal').style.display = 'none';
 };

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>學習練習 App</title>
+    <title>國中理化數學單元複習網</title>
     <link rel="stylesheet" href="style.css">
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -13,10 +13,9 @@
 <body>
 
     <div class="header">
-        <div class="icon-btn" id="left-action-btn">
-            <ion-icon name="person-circle-outline"></ion-icon>
-            <span id="login-label" style="font-size: 14px; margin-left: 5px; font-weight: bold; display:none;">登入/註冊</span>
-        </div>
+        <div class="icon-btn" id="left-action-btn" style="cursor: pointer;">
+    <ion-icon name="person-circle-outline"></ion-icon>
+    </div>
         
         <div class="icon-btn" id="back-btn" style="display: none;">
             <ion-icon name="arrow-back-outline"></ion-icon>
@@ -267,13 +266,13 @@
     <div id="notification-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 style="margin:0;">🔔 通知中心 (點擊通知可直接跳轉)</h3>
+                <h3 style="margin:0;font-size: 18px;">🔔 通知中心 (點擊通知可直接跳轉)</h3>
                 <button class="close-btn" id="close-notif">×</button>
             </div>
             <div class="modal-body" id="notif-list">
                 <p class="loading-text">載入中...</p>
             </div>
-            <button class="btn" style="background: #eee; color: #666; margin-top:15px;" id="btn-close-read">關閉並清除紅點</button>
+            <button class="btn" style="background: #eee; color: #666; margin-top:15px;" id="btn-close-read">關閉</button>
         </div>
     </div>
 
