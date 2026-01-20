@@ -206,38 +206,63 @@ onAuthStateChanged(auth, (user) => {
 function updateUI(user) {
     const inputArea = document.getElementById('chat-input-area');
     const authHint = document.getElementById('chat-auth-hint');
-    const loginLabel = document.getElementById('login-label');
-    const settingsBtn = document.getElementById('left-action-btn');
+    const leftActionBtn = document.getElementById('left-action-btn');
+    const leftIcon = leftActionBtn ? leftActionBtn.querySelector('ion-icon') : null;
 
     if (user) {
-        // 已登入
-        inputArea.style.display = 'flex';
-        authHint.style.display = 'none';
-        loginLabel.style.display = 'none';
+        // --- 已登入狀態 ---
+        if (inputArea) inputArea.style.display = 'flex';
+        if (authHint) authHint.style.display = 'none';
         
-        const displayName = user.displayName || user.email.split('@')[0];
-        document.getElementById('settings-user-info').innerText = `目前登入：${displayName} (${user.email})`;
-        document.getElementById('greeting-text').innerText = `嗨! ${displayName} `;
+        // 更新頭像為實心
+        if (leftIcon) leftIcon.setAttribute('name', 'person-circle');
 
-        if (user.email === ADMIN_EMAIL) {
-            document.getElementById('teacher-section').style.display = 'block';
-            fetchUnitsForAdmin();
-        } else {
-            document.getElementById('teacher-section').style.display = 'none';
+        const displayName = user.displayName || user.email.split('@')[0];
+        const userInfoEl = document.getElementById('settings-user-info');
+        if (userInfoEl) {
+            userInfoEl.innerText = `目前帳號：${user.email}`;
         }
         
-        settingsBtn.onclick = () => {
-            document.getElementById('settings-modal').style.display = 'flex';
-        };
+        const greetingEl = document.getElementById('greeting-text');
+        if (greetingEl) {
+            greetingEl.innerText = `嗨! ${displayName}`;
+        }
+
+        // 管理員權限判斷
+        const teacherSection = document.getElementById('teacher-section');
+        if (user.email === ADMIN_EMAIL) {
+            if (teacherSection) teacherSection.style.display = 'block';
+            fetchUnitsForAdmin();
+        } else {
+            if (teacherSection) teacherSection.style.display = 'none';
+        }
 
     } else {
-        // 未登入
-        inputArea.style.display = 'none';
-        authHint.style.display = 'flex';
-        loginLabel.style.display = 'inline';
-        document.getElementById('greeting-text').innerText = "哈囉！";
+        // --- 未登入狀態 ---
+        if (inputArea) inputArea.style.display = 'none';
+        if (authHint) authHint.style.display = 'flex';
         
-        settingsBtn.onclick = openAuthModal;
+        // 更新頭像為空心
+        if (leftIcon) leftIcon.setAttribute('name', 'person-circle-outline');
+        
+        const greetingEl = document.getElementById('greeting-text');
+        if (greetingEl) {
+            greetingEl.innerText = "哈囉！";
+        }
+        
+        const teacherSection = document.getElementById('teacher-section');
+        if (teacherSection) teacherSection.style.display = 'none';
+    }
+
+    // 重新統一綁定點擊事件，確保邏輯最新
+    if (leftActionBtn) {
+        leftActionBtn.onclick = () => {
+            if (auth.currentUser) {
+                document.getElementById('settings-modal').style.display = 'flex';
+            } else {
+                document.getElementById('auth-modal').style.display = 'flex';
+            }
+        };
     }
 }
 
@@ -331,19 +356,7 @@ document.getElementById('btn-do-register').onclick = async () => {
 // 登出
 // --- 修改後的登出邏輯 ---
 // --- 1. 左上角頭像點擊邏輯 ---
-document.getElementById('left-action-btn').onclick = () => {
-    if (auth.currentUser) {
-        // 已登入：顯示設定視窗 (裡面有你的登出鍵)
-        const userInfo = document.getElementById('settings-user-info');
-        if (userInfo) {
-            userInfo.innerText = `目前帳號：${auth.currentUser.email}`;
-        }
-        document.getElementById('settings-modal').style.display = 'flex';
-    } else {
-        // 未登入：跳出登入/註冊視窗
-        document.getElementById('auth-modal').style.display = 'flex';
-    }
-};
+
 
 // --- 2. 你的登出邏輯 (保持不變，確認 ID 正確即可) ---
 document.getElementById('btn-logout').onclick = async () => {
